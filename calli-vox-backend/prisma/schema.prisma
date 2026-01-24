@@ -1,0 +1,35 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Pseudonymized user profile
+model UserProfile {
+  id          String      @id // Hashed user identifier
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  stats       UsageStat[]
+
+  @@index([id])
+}
+
+// Usage statistics with location, sentence, and timestamp
+model UsageStat {
+  id          String    @id @default(uuid())
+  userId      String    // Foreign key to UserProfile
+  user        UserProfile @relation(fields: [userId], references: [id])
+  location    Json?     // Stores latitude and longitude as JSON
+  sentence    String    // The sentence spoken/recorded
+  timestamp   DateTime  @default(now())
+  deviceInfo  String?   // Optional device information
+
+  @@index([userId])
+  @@index([timestamp])
+}

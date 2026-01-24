@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Cette application a besoin d&apos;accéder au microphone pour la synthèse vocale.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Cette application a besoin d&apos;accéder à la reconnaissance vocale pour convertir la parole en texte.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need your location to enhance your experience</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>CalliVox souhaite accéder à votre localisation approximative pour améliorer notre service et personnaliser votre expérience. Vous pouvez désactiver cette fonction à tout moment.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
+</dict>
+</plist>
