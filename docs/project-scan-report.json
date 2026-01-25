@@ -1,0 +1,143 @@
+{
+  "workflow_version": "1.2.0",
+  "timestamps": {
+    "started": "2026-01-25T10:35:00Z",
+    "last_updated": "2026-01-25T11:15:00Z",
+    "completed": "2026-01-25T11:15:00Z"
+  },
+  "mode": "initial_scan",
+  "scan_level": "exhaustive",
+  "project_root": "/Users/croiseaux/devel/CalliVox",
+  "output_folder": "/Users/croiseaux/devel/CalliVox/docs",
+  "repository_type": "multi-part",
+  "completed_steps": [
+    {
+      "step": "step_1",
+      "status": "completed",
+      "timestamp": "2026-01-25T10:37:00Z",
+      "summary": "Classified as multi-part with 3 parts: backend (NestJS), site (static web), ios-app (SwiftUI)"
+    },
+    {
+      "step": "step_2",
+      "status": "completed",
+      "timestamp": "2026-01-25T10:38:00Z",
+      "summary": "Discovered existing documentation - none found"
+    },
+    {
+      "step": "step_3",
+      "status": "completed",
+      "timestamp": "2026-01-25T10:45:00Z",
+      "summary": "Analyzed tech stacks: NestJS/TypeScript, SwiftUI/Swift, HTML/CSS/JS"
+    },
+    {
+      "step": "step_4",
+      "status": "completed",
+      "timestamp": "2026-01-25T11:00:00Z",
+      "summary": "Exhaustive scan complete - read all 38 source files across 3 parts"
+    },
+    {
+      "step": "step_5",
+      "status": "completed",
+      "timestamp": "2026-01-25T11:02:00Z",
+      "summary": "Source tree analysis documented"
+    },
+    {
+      "step": "step_6",
+      "status": "completed",
+      "timestamp": "2026-01-25T11:03:00Z",
+      "summary": "Development and deployment guides documented"
+    },
+    {
+      "step": "step_7",
+      "status": "completed",
+      "timestamp": "2026-01-25T11:05:00Z",
+      "summary": "Integration architecture documented - iOS/Backend/ElevenLabs integration"
+    },
+    {
+      "step": "step_8",
+      "status": "completed",
+      "timestamp": "2026-01-25T11:08:00Z",
+      "summary": "Architecture docs written for 3 parts"
+    },
+    {
+      "step": "step_9",
+      "status": "completed",
+      "timestamp": "2026-01-25T11:12:00Z",
+      "summary": "All supporting documentation generated"
+    },
+    {
+      "step": "step_10",
+      "status": "completed",
+      "timestamp": "2026-01-25T11:14:00Z",
+      "summary": "Master index generated"
+    },
+    {
+      "step": "step_11",
+      "status": "completed",
+      "timestamp": "2026-01-25T11:14:30Z",
+      "summary": "Validation complete - all documents generated"
+    },
+    {
+      "step": "step_12",
+      "status": "completed",
+      "timestamp": "2026-01-25T11:15:00Z",
+      "summary": "Workflow complete"
+    }
+  ],
+  "current_step": "completed",
+  "findings": {
+    "project_classification": "multi-part, 3 parts, TypeScript/Swift/HTML",
+    "technology_stack": {
+      "backend": "NestJS, TypeScript, Prisma, PostgreSQL, JWT",
+      "ios-app": "SwiftUI, AVFoundation, ElevenLabs, Apple Sign In",
+      "site": "HTML, CSS, JavaScript, jQuery"
+    },
+    "files_scanned": 38,
+    "batches_completed": [
+      {"path": "calli-vox-backend/src", "files_scanned": 17, "summary": "All backend TypeScript files"},
+      {"path": "HandwritingToSpeechSwiftUI", "files_scanned": 17, "summary": "All iOS Swift files"},
+      {"path": "CalliVox-Site", "files_scanned": 4, "summary": "All website files"}
+    ]
+  },
+  "outputs_generated": [
+    "project-scan-report.json",
+    "project-overview.md",
+    "source-tree-analysis.md",
+    "architecture-backend.md",
+    "architecture-ios-app.md",
+    "architecture-site.md",
+    "api-contracts-backend.md",
+    "data-models-backend.md",
+    "integration-architecture.md",
+    "development-guide.md",
+    "index.md"
+  ],
+  "project_types": [
+    {"part_id": "backend", "project_type_id": "backend", "display_name": "calli-vox-backend", "root_path": "/calli-vox-backend"},
+    {"part_id": "site", "project_type_id": "web", "display_name": "CalliVox-Site", "root_path": "/CalliVox-Site"},
+    {"part_id": "ios-app", "project_type_id": "mobile", "display_name": "HandwritingToSpeechSwiftUI", "root_path": "/HandwritingToSpeechSwiftUI"}
+  ],
+  "project_parts": [
+    {
+      "part_id": "backend",
+      "name": "calli-vox-backend",
+      "project_type_id": "backend",
+      "root_path": "/Users/croiseaux/devel/CalliVox/calli-vox-backend",
+      "technologies": ["NestJS", "TypeScript", "Prisma", "PostgreSQL", "Passport.js", "JWT", "Swagger"]
+    },
+    {
+      "part_id": "site",
+      "name": "CalliVox-Site",
+      "project_type_id": "web",
+      "root_path": "/Users/croiseaux/devel/CalliVox/CalliVox-Site",
+      "technologies": ["HTML", "CSS", "JavaScript", "jQuery", "AOS", "Owl Carousel"]
+    },
+    {
+      "part_id": "ios-app",
+      "name": "HandwritingToSpeechSwiftUI",
+      "project_type_id": "mobile",
+      "root_path": "/Users/croiseaux/devel/CalliVox/HandwritingToSpeechSwiftUI",
+      "technologies": ["SwiftUI", "AVFoundation", "ElevenLabs API", "Apple Sign In", "Keychain"]
+    }
+  ]
+}
