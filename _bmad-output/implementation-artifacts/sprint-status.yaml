@@ -47,15 +47,15 @@ development_status:
   epic-1-retrospective: optional
 
   # Epic 2: Reliable Communication
-  epic-2: in-progress
+  epic-2: done
   2-1-network-monitoring-and-offline-detection: done
-  2-2-avfoundation-offline-fallback: backlog
-  2-3-graceful-error-handling: backlog
+  2-2-avfoundation-offline-fallback: done
+  2-3-graceful-error-handling: done
   epic-2-retrospective: optional
 
   # Epic 3: AI-Assisted Responses
-  epic-3: backlog
-  3-1-llm-service-integration: backlog
+  epic-3: in-progress
+  3-1-llm-service-integration: done
   3-2-multi-suggestion-generation: backlog
   3-3-suggestion-selection-ui: backlog
   epic-3-retrospective: optional

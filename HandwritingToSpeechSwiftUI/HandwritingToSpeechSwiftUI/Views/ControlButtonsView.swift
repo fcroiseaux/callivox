@@ -144,6 +144,7 @@ struct ControlButtonsView: View {
     @Binding var showPhraseManager: Bool
     @Binding var speakTask: Task<Void, Never>?
     @State private var showUsageSettings: Bool = false
+    @State private var showLLMSettings: Bool = false
     
     var body: some View {
         VStack(spacing: 20) {
@@ -218,7 +219,32 @@ struct ControlButtonsView: View {
                 .cornerRadius(10)
             }
             .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
-            
+
+            // Bouton paramètres IA (Story 3.1 AC4)
+            Button(action: {
+                showLLMSettings = true
+            }) {
+                HStack {
+                    Text("Service IA")
+                        .font(.title2)
+                    Image(systemName: "brain")
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.indigo, Color.indigo.opacity(0.8)]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .cornerRadius(10)
+            }
+            .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
+            .accessibilityLabel("Paramètres du service IA")
+            .accessibilityHint("Configurer la clé API pour les suggestions intelligentes")
+
             // Bouton paramètres de confidentialité - hidden when auth is skipped
             if !AppConfig.Features.skipAuthentication {
                 Button(action: {
@@ -310,6 +336,11 @@ struct ControlButtonsView: View {
         .frame(minWidth: 200, idealWidth: 250, maxWidth: 300, alignment: .leading)
         .sheet(isPresented: $showUsageSettings) {
             UsageSettingsView()
+        }
+        .sheet(isPresented: $showLLMSettings) {
+            NavigationView {
+                LLMSettingsView()
+            }
         }
     }
 }

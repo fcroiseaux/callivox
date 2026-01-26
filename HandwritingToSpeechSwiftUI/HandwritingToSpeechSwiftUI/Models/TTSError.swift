@@ -79,7 +79,8 @@ enum TTSError: LocalizedError {
         case .rateLimited:
             return "Attendez quelques secondes avant de réessayer."
         case .timeout:
-            return "Vérifiez votre connexion et réessayez."
+            // Story 2.3 AC4: Mention offline fallback availability
+            return "Vérifiez votre connexion. Le mode hors-ligne reste disponible."
         }
     }
 }

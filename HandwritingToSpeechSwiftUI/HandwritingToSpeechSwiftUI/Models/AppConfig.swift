@@ -83,4 +83,28 @@ struct AppConfig {
         /// Sample text for voice preview
         static let previewTextTemplate = "Bonjour, je suis la voix %@"
     }
+
+    // LLM Service Configuration (Story 3.1)
+    struct LLM {
+        /// Cerebras API endpoint (OpenAI-compatible)
+        static let apiEndpoint = "https://api.cerebras.ai/v1/chat/completions"
+
+        /// Default model for suggestions
+        static let defaultModel = "qwen-3-235b-a22b-instruct-2507"
+
+        /// Keychain key for storing LLM API key
+        static let keychainKey = "llm_api_key"
+
+        /// Request timeout in seconds (NFR-8: < 500ms target)
+        static let timeout: TimeInterval = 10.0
+
+        /// Maximum tokens for response
+        static let maxTokens = 500
+
+        /// Temperature for response creativity (0.0-1.5)
+        static let temperature = 0.7
+
+        /// Number of suggestions to generate
+        static let suggestionCount = 4
+    }
 }

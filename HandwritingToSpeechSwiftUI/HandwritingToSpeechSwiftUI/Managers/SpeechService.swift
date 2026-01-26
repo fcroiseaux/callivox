@@ -52,12 +52,17 @@ class SpeechService: ObservableObject {
         print("SpeechService: Logging usage statistics...")
         UsageLogManager.shared.logSentenceUsage(text)
 
-        // Use Gradium if enabled and available, otherwise native
-        if useGradium {
+        // AC1, AC2, AC4: Automatic fallback to AVFoundation when offline (Story 2.2)
+        if useGradium && isNetworkAvailable {
             print("SpeechService: Using Gradium for TTS")
             speakTextGradium(text)
         } else {
-            print("SpeechService: Using native AVSpeechSynthesizer for TTS")
+            // Log fallback reason for debugging
+            if useGradium && !isNetworkAvailable {
+                print("SpeechService: Network offline, using AVFoundation fallback")
+            } else {
+                print("SpeechService: Using native AVSpeechSynthesizer for TTS")
+            }
             speakTextNative(text)
         }
     }
@@ -79,7 +84,9 @@ class SpeechService: ObservableObject {
         do {
             guard !Task.isCancelled else { return }
 
-            // Check network availability before API call (Architecture requirement)
+            // Story 2.2: Network check is now done in speakText(_:) before calling this method.
+            // This defensive check remains for edge cases where network state changes mid-execution
+            // or if this method is called directly. Should rarely trigger during normal operation.
             guard isNetworkAvailable else {
                 throw TTSError.networkUnavailable
             }
@@ -133,24 +140,28 @@ class SpeechService: ObservableObject {
         }
     }
 
+    /// Displays user-friendly error message with recovery suggestion (Story 2.3)
+    /// AC1: All errors show French message + what went wrong + what user can do
+    /// AC2: invalidApiKey guides user to check API configuration
+    /// AC5: All errors logged for debugging, never silently swallowed
     private func updateUIForGradiumError(_ error: Error) {
         let errorMsg: String
 
         if let ttsError = error as? TTSError {
-            // AC2 & AC3: Show appropriate French error message with guidance
-            if case .invalidApiKey = ttsError {
-                // AC2: Guide user to configure API key
-                errorMsg = "\(ttsError.localizedDescription) \(ttsError.recoverySuggestion ?? "")"
+            // Story 2.3 AC1, AC2: Include both error description AND recovery suggestion for ALL errors
+            if let suggestion = ttsError.recoverySuggestion {
+                errorMsg = "\(ttsError.localizedDescription)\n\n\(suggestion)"
             } else {
                 errorMsg = ttsError.localizedDescription
             }
             gradiumAvailable = false
             useGradium = false
-            // AC3: Log error for debugging
+            // AC5: Log error for debugging (never silent)
             print("SpeechService [ERROR]: TTSError - \(ttsError.failureReason ?? "unknown")")
         } else {
+            // Generic error fallback with French message
             errorMsg = "Erreur Gradium: \(error.localizedDescription)"
-            // AC3: Log error for debugging
+            // AC5: Log error for debugging
             print("SpeechService [ERROR]: \(error)")
         }
 
@@ -323,16 +334,35 @@ class SpeechService: ObservableObject {
         print("SpeechService: Voice selected and saved: \(voiceId)")
     }
 
+    /// Speaks text using native AVFoundation TTS (Story 2.2: AC3)
+    /// Used as primary when useGradium=false, or as fallback when offline
     func speakTextNative(_ text: String) {
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = AVSpeechSynthesisVoice(language: "fr-FR")
         utterance.rate = 0.5
         utterance.pitchMultiplier = 1.0
+
+        // Stop any current speech before starting new
         if audioManager.synthesizer.isSpeaking {
             audioManager.synthesizer.stopSpeaking(at: .immediate)
         }
+
+        // AC3: Set completion callback to reset isLoading when speech finishes
+        // This ensures text clears identically to Gradium path
+        //
+        // Note: Callback is overwritten on each call, which is safe because:
+        // 1. We call stopSpeaking(at: .immediate) above if already speaking
+        // 2. Previous speech is stopped before new callback is set
+        // 3. AVSpeechSynthesizer only calls didFinish for the current utterance
+        audioManager.onAudioCompletion = { [weak self] in
+            Task { @MainActor in
+                self?.isLoading = false
+                print("SpeechService: Native speech completed")
+            }
+        }
+
         audioManager.synthesizer.speak(utterance)
-        isLoading = false
+        // Note: isLoading will be reset to false via onAudioCompletion callback when speech finishes
     }
 
     func correctText(_ text: String) -> String {

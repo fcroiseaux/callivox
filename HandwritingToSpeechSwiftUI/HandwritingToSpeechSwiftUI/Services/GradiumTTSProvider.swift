@@ -26,10 +26,12 @@ import Foundation
 class GradiumTTSProvider: ObservableObject, TTSProvider {
 
     // MARK: - Published Properties
+    // Note: These properties are used internally for error state tracking.
+    // UI display is handled by SpeechService which catches errors from the AsyncThrowingStream.
 
-    @Published var isLoading = false
-    @Published var showError = false
-    @Published var errorMessage = ""
+    @Published private(set) var isLoading = false
+    @Published private(set) var showError = false
+    @Published private(set) var errorMessage = ""
 
     // MARK: - Private Properties
 
@@ -159,21 +161,33 @@ class GradiumTTSProvider: ObservableObject, TTSProvider {
         }
     }
 
+    /// Story 2.3: Handle errors with French messages AND recovery suggestions
+    /// Consistent with SpeechService.updateUIForGradiumError formatting
     @MainActor
     private func handleError(_ error: Error) {
-        if let ttsError = error as? TTSError {
-            errorMessage = ttsError.localizedDescription
+        let ttsError: TTSError
+
+        if let existing = error as? TTSError {
+            ttsError = existing
         } else if (error as NSError).code == NSURLErrorTimedOut {
-            errorMessage = TTSError.timeout.localizedDescription
+            ttsError = .timeout
         } else if (error as NSError).code == NSURLErrorNotConnectedToInternet {
-            errorMessage = TTSError.networkUnavailable.localizedDescription
+            ttsError = .networkUnavailable
         } else {
-            errorMessage = TTSError.apiError(statusCode: 0, message: error.localizedDescription).localizedDescription
+            ttsError = .apiError(statusCode: 0, message: error.localizedDescription)
         }
+
+        // Story 2.3 AC1: Include both error description AND recovery suggestion
+        if let suggestion = ttsError.recoverySuggestion {
+            errorMessage = "\(ttsError.localizedDescription)\n\n\(suggestion)"
+        } else {
+            errorMessage = ttsError.localizedDescription
+        }
+
         showError = true
         isLoading = false
 
-        // Log error for debugging
-        print("GradiumTTSProvider Error: \(errorMessage)")
+        // Log error for debugging (AC5: never silent)
+        print("GradiumTTSProvider Error: \(ttsError.failureReason ?? "unknown") - \(errorMessage)")
     }
 }
