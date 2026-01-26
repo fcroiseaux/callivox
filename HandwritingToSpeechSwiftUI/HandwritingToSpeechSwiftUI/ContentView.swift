@@ -86,25 +86,32 @@ struct ContentView: View {
     @State private var showUsageSettings: Bool = false
     
     var body: some View {
-        HStack(alignment: .top) {
-            // Colonne de gauche : boutons principaux - Utilisant ControlButtonsView existant
-            ControlButtonsView(
-                recognizedText: $recognizedText,
-                showPhraseManager: $showPhraseManager,
-                speakTask: $speakTask
-            )
-            
-            // Colonne de droite : contenu principal amélioré
-            VStack(alignment: .leading, spacing: 20) {
-                VStack {
-                    Text("CalliVox")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundColor(.blue)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                }
-                .padding(.horizontal)
+        VStack(spacing: 0) {
+            // Offline indicator at top of screen (Story 2.1: AC2, AC3)
+            // M1 Fix: Removed redundant animation modifier - animation is handled in OfflineIndicatorView
+            // M2 Fix: OfflineIndicatorView now handles its own NetworkMonitor observation
+            OfflineIndicatorView()
+                .padding(.top, 8)
+
+            HStack(alignment: .top) {
+                // Colonne de gauche : boutons principaux - Utilisant ControlButtonsView existant
+                ControlButtonsView(
+                    recognizedText: $recognizedText,
+                    showPhraseManager: $showPhraseManager,
+                    speakTask: $speakTask
+                )
+
+                // Colonne de droite : contenu principal amélioré
+                VStack(alignment: .leading, spacing: 20) {
+                    VStack {
+                        Text("CalliVox")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .foregroundColor(.blue)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .padding(.horizontal)
                 
                 // Improved text input area with immediate speak button
                 TextInputWithSpeakButton(
@@ -141,9 +148,10 @@ struct ContentView: View {
                     }
                 }
             }
-            .padding(.vertical)
-            .frame(maxHeight: .infinity, alignment: .top)
-        }
+                .padding(.vertical)
+                .frame(maxHeight: .infinity, alignment: .top)
+            }
+        } // End outer VStack (Story 2.1)
         // Fenêtre modale de gestion des phrases prédéfinies
         .sheet(isPresented: $showPhraseManager) {
             PhrasesListView()

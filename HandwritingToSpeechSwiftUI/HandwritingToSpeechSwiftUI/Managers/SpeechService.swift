@@ -28,15 +28,9 @@ class SpeechService: ObservableObject {
     private let gradiumProvider = GradiumTTSProvider()
     private let pcmStreamPlayer = PCMStreamPlayer()
 
-    // Network monitoring for Gradium API calls (shared instance to avoid duplicate monitors)
-    private static let sharedNetworkMonitor = NWPathMonitor()
-    private static let networkQueue = DispatchQueue(label: "NetworkMonitor")
-    private static var sharedNetworkAvailable = true
-    private static var networkMonitorStarted = false
-
+    // Network availability is now provided by NetworkMonitor singleton (Story 2.1)
     private var isNetworkAvailable: Bool {
-        get { Self.sharedNetworkAvailable }
-        set { Self.sharedNetworkAvailable = newValue }
+        NetworkMonitor.shared.isConnected
     }
 
     deinit {
@@ -45,21 +39,7 @@ class SpeechService: ObservableObject {
 
     init() {
         checkGradiumAvailability()
-        setupNetworkMonitoring()
         loadVoicePreference()
-    }
-
-    private func setupNetworkMonitoring() {
-        // Use shared monitor to avoid duplicate NWPathMonitor instances
-        guard !Self.networkMonitorStarted else { return }
-        Self.networkMonitorStarted = true
-
-        Self.sharedNetworkMonitor.pathUpdateHandler = { path in
-            Task { @MainActor in
-                Self.sharedNetworkAvailable = path.status == .satisfied
-            }
-        }
-        Self.sharedNetworkMonitor.start(queue: Self.networkQueue)
     }
 
     func speakText(_ text: String) {
