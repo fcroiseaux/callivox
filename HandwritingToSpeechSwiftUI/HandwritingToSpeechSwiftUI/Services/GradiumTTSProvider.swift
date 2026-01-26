@@ -56,7 +56,7 @@ class GradiumTTSProvider: ObservableObject, TTSProvider {
                 do {
                     try await self.performStreamingRequest(request: request, continuation: continuation)
                 } catch {
-                    await self.handleError(error)
+                    self.handleError(error)
                     continuation.finish(throwing: error)
                 }
             }
