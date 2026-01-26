@@ -20,7 +20,7 @@ CalliVox/
 ### Application iOS
 - **Framework** : SwiftUI
 - **Authentification** : Apple Sign In
-- **Synthèse vocale** : AVSpeechSynthesizer (natif) + ElevenLabs API (voix personnalisées)
+- **Synthèse vocale** : AVSpeechSynthesizer (natif) + Gradium TTS API (voix personnalisées)
 - **Stockage sécurisé** : Keychain
 
 ### Backend
@@ -36,7 +36,7 @@ CalliVox/
 ## Fonctionnalités principales
 
 - Saisie de texte par clavier ou écriture manuscrite (Apple Pencil)
-- Synthèse vocale avec voix natives Apple ou voix personnalisées ElevenLabs
+- Synthèse vocale avec voix natives Apple ou voix personnalisées Gradium
 - Authentification sécurisée via Apple Sign In
 - Statistiques d'utilisation anonymisées
 - Répétition automatique du dernier texte prononcé

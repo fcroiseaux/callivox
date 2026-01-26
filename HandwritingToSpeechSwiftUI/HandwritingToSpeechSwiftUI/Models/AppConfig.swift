@@ -45,4 +45,42 @@ struct AppConfig {
         #endif
         */
     }
+
+    // Gradium TTS Configuration
+    struct Gradium {
+        /// Gradium TTS API endpoint (EU region)
+        static let apiEndpoint = "https://eu.api.gradium.ai/api/tts"
+
+        /// Default voice ID for French
+        static let defaultVoiceId = "olivier"
+
+        /// Output format for audio (PCM 24kHz Int16 Mono)
+        static let outputFormat = "pcm"
+
+        /// Request timeout in seconds
+        static let timeout: TimeInterval = 15.0
+
+        /// Keychain key for storing Gradium API key
+        static let keychainKey = "gradium_api_key"
+
+        /// Chunk size in bytes for streaming audio data (4KB optimal for smooth playback)
+        static let streamingChunkSize = 4096
+    }
+
+    // Voice Selection Configuration (Story 1.3)
+    struct VoiceConfig {
+        /// UserDefaults key for persisting voice preference
+        static let userDefaultsKey = "selected_voice_id"
+
+        /// Default voice ID for French locale users
+        static let defaultVoiceId = "olivier"
+
+        /// Available Gradium voices with display metadata
+        static let availableVoices: [(id: String, name: String, description: String)] = [
+            ("olivier", "Olivier", "Voix masculine française")
+        ]
+
+        /// Sample text for voice preview
+        static let previewTextTemplate = "Bonjour, je suis la voix %@"
+    }
 }

@@ -54,7 +54,7 @@ class AudioManager: NSObject, ObservableObject, AVAudioPlayerDelegate, AVSpeechS
     private func setupAudioAsync() async throws {
         return try await withCheckedThrowingContinuation { continuation in
             do {
-                try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.duckOthers, .allowBluetooth])
+                try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.duckOthers, .allowBluetoothA2DP])
                 try AVAudioSession.sharedInstance().setActive(true)
                 continuation.resume()
             } catch {

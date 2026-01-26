@@ -152,7 +152,6 @@ struct ContentView: View {
             loadData()
         }
         .onDisappear {
-            speechService.stopAvailabilityTimer()
             cancelTasks()
         }
         .alert("Erreur", isPresented: $speechService.showError) {

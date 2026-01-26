@@ -342,7 +342,7 @@ class UsageLogManager: NSObject, ObservableObject, CLLocationManagerDelegate, @u
     
     /// Send a log to the server (or store it offline if not authenticated).
     private func submitLog(_ log: UsageLog) {
-        guard let token = KeychainManager.getAuthToken() else {
+        guard KeychainManager.getAuthToken() != nil else {
             print("Usage logging: User not authenticated, saving offline")
             saveLogOffline(log)
             return
@@ -368,7 +368,7 @@ class UsageLogManager: NSObject, ObservableObject, CLLocationManagerDelegate, @u
                 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
                 request.httpBody = encodedLog
                 
-                let (data, response) = try await URLSession.shared.data(for: request)
+                let (_, response) = try await URLSession.shared.data(for: request)
                 guard let httpResponse = response as? HTTPURLResponse else {
                     print("Usage logging: Invalid HTTP response, saving offline")
                     saveLogOffline(log)

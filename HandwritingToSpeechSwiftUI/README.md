@@ -5,7 +5,7 @@
 Ce projet est une application iOS développée en SwiftUI qui permet de convertir du texte en parole. L'application prend en charge la saisie de texte (avec prise en charge d'Apple Pencil Scribble), la correction automatique des fautes et la lecture vocale du texte entré. Vous pouvez choisir entre deux modes de synthèse vocale :
 
 - **Synthèse vocale native d'Apple** via `AVSpeechSynthesizer`
-- **Voix d'Odile** via l'API ElevenLabs
+- **Voix Gradium** via l'API Gradium TTS
 
 L'application intègre également une fonctionnalité qui permet de répéter le dernier texte dicté à l'aide d'un bouton dédié.
 
@@ -16,7 +16,7 @@ L'application intègre également une fonctionnalité qui permet de répéter le
 
 - **Lecture vocale**  
   - Utilisation de la synthèse vocale native d'Apple.  
-  - Option d'utiliser l'API ElevenLabs pour obtenir la voix d'Odile.
+  - Option d'utiliser l'API Gradium TTS pour des voix personnalisées.
 
 - **Lecture automatique**  
   Possibilité d'activer la lecture automatique après une saisie de texte.
@@ -44,10 +44,10 @@ L'application intègre également une fonctionnalité qui permet de répéter le
 
 - Lancez Xcode et ouvrez le fichier .xcodeproj ou .xcworkspace du projet.
 
-3. Configurer l'API ElevenLabs (facultatif) :
+3. Configurer l'API Gradium TTS (facultatif) :
 
-- Pour utiliser la voix d'Odile via ElevenLabs, assurez-vous de posséder une clé API valide.
-- Dans le fichier contenant la fonction speakTextElevenLabs, remplacez la valeur de la clé API (xi-api-key) par votre propre clé.
+- Pour utiliser les voix Gradium, assurez-vous de posséder une clé API valide.
+- La clé API est stockée de manière sécurisée dans le Keychain et peut être configurée dans les paramètres de l'application.
 
 ## Utilisation
 - Saisie et lecture de texte :
@@ -62,7 +62,7 @@ L'application intègre également une fonctionnalité qui permet de répéter le
 ## Structure du Projet
 ContentView.swift : Vue principale de l'application gérant l'interface utilisateur et l'intégration des fonctionnalités de lecture.
 AudioManager.swift : Classe qui configure et gère la lecture audio via AVFoundation.
-API ElevenLabs : Implémentation de l'appel API pour la synthèse vocale via ElevenLabs.
+Gradium TTS : Intégration de l'API Gradium pour la synthèse vocale personnalisée.
 
 ## Contributions
 Les contributions sont les bienvenues ! Si vous souhaitez apporter des améliorations ou corriger des bugs, veuillez ouvrir une issue ou soumettre une merge request.
