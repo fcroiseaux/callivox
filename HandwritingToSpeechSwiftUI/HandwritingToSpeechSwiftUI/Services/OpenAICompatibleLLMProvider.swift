@@ -156,13 +156,32 @@ class OpenAICompatibleLLMProvider: ObservableObject, LLMProvider {
     }
 
     /// System prompt for the LLM to generate suggestions.
+    /// Now includes personalization settings (Story 4.1, AC5).
     private func buildSystemPrompt() -> String {
-        """
+        // Load user's personalization settings
+        let config = PersonalizationConfig.loadFromUserDefaults()
+
+        // Build base prompt
+        var prompt = """
         Tu es un assistant d'aide à la communication pour une personne qui ne peut pas parler. \
         Tu génères des suggestions de réponses courtes et naturelles en français. \
         Génère exactement \(AppConfig.LLM.suggestionCount) suggestions différentes, \
         une par ligne, numérotées de 1 à \(AppConfig.LLM.suggestionCount).
         """
+
+        // Add tone instruction (Story 4.1)
+        prompt += " \(config.tone.promptInstruction)"
+
+        // Add response length instruction (Story 4.1)
+        prompt += " \(config.responseLength.promptInstruction)"
+
+        // Add personal context if provided (Story 4.1)
+        let trimmedContext = config.personalContext.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedContext.isEmpty {
+            prompt += " Contexte personnel de l'utilisateur: \(trimmedContext)"
+        }
+
+        return prompt
     }
 
     /// User prompt requesting suggestions.

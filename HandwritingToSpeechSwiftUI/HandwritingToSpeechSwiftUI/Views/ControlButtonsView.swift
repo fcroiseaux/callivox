@@ -145,6 +145,7 @@ struct ControlButtonsView: View {
     @Binding var speakTask: Task<Void, Never>?
     @State private var showUsageSettings: Bool = false
     @State private var showLLMSettings: Bool = false
+    @State private var showPersonalizationSettings: Bool = false
     
     var body: some View {
         VStack(spacing: 20) {
@@ -219,6 +220,8 @@ struct ControlButtonsView: View {
                 .cornerRadius(10)
             }
             .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
+            .accessibilityLabel("Gérer les phrases prédéfinies")
+            .accessibilityHint("Ouvre la gestion des phrases rapides")
 
             // Bouton paramètres IA (Story 3.1 AC4)
             Button(action: {
@@ -244,6 +247,31 @@ struct ControlButtonsView: View {
             .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
             .accessibilityLabel("Paramètres du service IA")
             .accessibilityHint("Configurer la clé API pour les suggestions intelligentes")
+
+            // Bouton personnalisation IA (Story 4.1)
+            Button(action: {
+                showPersonalizationSettings = true
+            }) {
+                HStack {
+                    Text("Personnalisation IA")
+                        .font(.title2)
+                    Image(systemName: "person.text.rectangle")
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.cyan, Color.cyan.opacity(0.8)]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .cornerRadius(10)
+            }
+            .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
+            .accessibilityLabel("Personnalisation de l'IA")
+            .accessibilityHint("Personnaliser le ton et le style des suggestions")
 
             // Bouton paramètres de confidentialité - hidden when auth is skipped
             if !AppConfig.Features.skipAuthentication {
@@ -340,6 +368,11 @@ struct ControlButtonsView: View {
         .sheet(isPresented: $showLLMSettings) {
             NavigationView {
                 LLMSettingsView()
+            }
+        }
+        .sheet(isPresented: $showPersonalizationSettings) {
+            NavigationView {
+                PersonalizationSettingsView()
             }
         }
     }

@@ -77,8 +77,10 @@ struct TextInputWithSpeakButton: View {
 struct ContentView: View {
     @StateObject private var speechService = SpeechService.shared
     @StateObject private var presetManager = PresetSentenceManager.shared
+    // M2 Fix: Use @ObservedObject for shared singleton (consistent with other service patterns)
+    @ObservedObject private var suggestionService = SuggestionService.shared
     @EnvironmentObject var userModel: UserModel
-    
+
     @State private var recognizedText: String = ""
     @State private var autoRead: Bool = false
     @State private var speakTask: Task<Void, Never>?
@@ -121,7 +123,27 @@ struct ContentView: View {
                         recognizedText = ""
                     }
                 )
-                
+
+                // Story 3.3: AI Suggestions section
+                VStack(alignment: .leading, spacing: 8) {
+                    // Generate suggestions button
+                    HStack {
+                        Spacer()
+                        GenerateSuggestionsButton(currentText: recognizedText)
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+
+                    // Suggestion display (shows when suggestions available)
+                    SuggestionView(
+                        currentText: recognizedText,
+                        onSuggestionSelected: { _ in
+                            // Clear text field after selection (TTS already triggered by SuggestionView)
+                            recognizedText = ""
+                        }
+                    )
+                }
+
                 // Quick selection view with toggles
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
@@ -166,6 +188,16 @@ struct ContentView: View {
             Button("OK") { speechService.showError = false }
         } message: {
             Text(speechService.errorMessage)
+        }
+        // Story 3.3: Error alert for suggestion service
+        // Use Binding wrapper since showError is private(set)
+        .alert("Erreur IA", isPresented: Binding(
+            get: { suggestionService.showError },
+            set: { _ in suggestionService.dismissError() }
+        )) {
+            Button("OK") { suggestionService.dismissError() }
+        } message: {
+            Text(suggestionService.errorMessage)
         }
         .onChange(of: recognizedText) { oldValue, newValue in
             handleTextChange(oldValue: oldValue, newValue: newValue)

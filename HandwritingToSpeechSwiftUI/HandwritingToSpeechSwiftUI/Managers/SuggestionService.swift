@@ -84,10 +84,10 @@ class SuggestionService: ObservableObject {
             return
         }
 
-        // AC2: Set loading state and clear previous suggestions
+        // AC2: Set loading state (AC4: keep previous suggestions visible until new ones arrive)
         isLoading = true
         showError = false
-        suggestions = []
+        // Note: Don't clear suggestions here - AC4 requires previous suggestions remain visible
 
         do {
             // AC3: Use provided context or fall back to conversation history

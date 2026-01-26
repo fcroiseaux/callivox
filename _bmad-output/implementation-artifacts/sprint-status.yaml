@@ -54,14 +54,14 @@ development_status:
   epic-2-retrospective: optional
 
   # Epic 3: AI-Assisted Responses
-  epic-3: in-progress
+  epic-3: done
   3-1-llm-service-integration: done
   3-2-multi-suggestion-generation: done
-  3-3-suggestion-selection-ui: backlog
+  3-3-suggestion-selection-ui: done
   epic-3-retrospective: optional
 
   # Epic 4: Personalized AI Experience
-  epic-4: backlog
-  4-1-llm-personalization-settings: backlog
+  epic-4: in-progress
+  4-1-llm-personalization-settings: done
   4-2-ui-guidance-controls: backlog
   epic-4-retrospective: optional
