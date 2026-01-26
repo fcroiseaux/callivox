@@ -1,4 +1,4 @@
-# generated: 2026-01-25
+# generated: 2026-01-26
 # project: CalliVox
 # tracking_system: file-system
 # story_location: /Users/croiseaux/devel/CalliVox/_bmad-output/implementation-artifacts
@@ -32,7 +32,7 @@
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-01-25
+generated: 2026-01-26
 project: CalliVox
 tracking_system: file-system
 story_location: /Users/croiseaux/devel/CalliVox/_bmad-output/implementation-artifacts
@@ -61,7 +61,7 @@ development_status:
   epic-3-retrospective: optional
 
   # Epic 4: Personalized AI Experience
-  epic-4: in-progress
+  epic-4: done
   4-1-llm-personalization-settings: done
-  4-2-ui-guidance-controls: backlog
+  4-2-ui-guidance-controls: done
   epic-4-retrospective: optional

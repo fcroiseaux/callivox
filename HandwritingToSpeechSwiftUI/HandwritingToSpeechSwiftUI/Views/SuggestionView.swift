@@ -13,10 +13,12 @@ import UIKit
 
 /// Individual suggestion card component (AC: 1, 5)
 /// Follows SpeechShortcutsView button pattern with accessibility support.
+/// Story 4.2: Added context menu for "More like this" (AC3)
 @MainActor
 struct SuggestionCard: View {
     let suggestion: String
     let onSelect: () -> Void
+    let onMoreLikeThis: () -> Void
 
     var body: some View {
         Button(action: onSelect) {
@@ -32,6 +34,14 @@ struct SuggestionCard: View {
         .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
         .accessibilityLabel(suggestion)
         .accessibilityHint("Double-tapez pour prononcer cette suggestion")
+        // Story 4.2: Context menu for "More like this" (AC3)
+        .contextMenu {
+            Button {
+                onMoreLikeThis()
+            } label: {
+                Label("Plus comme ça", systemImage: "plus.circle")
+            }
+        }
     }
 }
 
@@ -88,6 +98,26 @@ struct SuggestionView: View {
 
             Spacer()
 
+            // Story 4.2: "Different" button (AC4)
+            Button(action: generateDifferent) {
+                HStack(spacing: 4) {
+                    Image(systemName: "shuffle")
+                        .font(.system(size: 12, weight: .medium))
+                    Text("Autre")
+                        .font(.caption)
+                }
+                .foregroundColor(.secondary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color(.systemGray5))
+                .cornerRadius(8)
+            }
+            .buttonStyle(ScaleButtonStyle(scaleAmount: 0.9, pressedColor: .clear, normalColor: .clear))
+            .disabled(suggestionService.isLoading || suggestionService.suggestions.isEmpty)
+            .opacity(suggestionService.isLoading || suggestionService.suggestions.isEmpty ? 0.4 : 1.0)
+            .accessibilityLabel("Autres suggestions")
+            .accessibilityHint("Génère des suggestions complètement différentes")
+
             // AC3: Refresh button
             Button(action: refreshSuggestions) {
                 Image(systemName: "arrow.clockwise")
@@ -140,9 +170,11 @@ struct SuggestionView: View {
     private var suggestionsList: some View {
         VStack(spacing: 8) {
             ForEach(suggestionService.suggestions, id: \.self) { suggestion in
-                SuggestionCard(suggestion: suggestion) {
-                    selectSuggestion(suggestion)
-                }
+                SuggestionCard(
+                    suggestion: suggestion,
+                    onSelect: { selectSuggestion(suggestion) },
+                    onMoreLikeThis: { moreLikeThis(suggestion) }
+                )
             }
         }
     }
@@ -182,6 +214,27 @@ struct SuggestionView: View {
     /// AC3: Dismisses suggestions to allow manual typing
     private func dismissSuggestions() {
         suggestionService.clearSuggestions()
+    }
+
+    // MARK: - Story 4.2: Guidance Actions
+
+    /// Story 4.2 AC4: Generates completely different suggestions
+    private func generateDifferent() {
+        // H2 Fix: Add haptic feedback (Task 5 requirement)
+        let impact = UIImpactFeedbackGenerator(style: .light)
+        impact.impactOccurred()
+        Task {
+            await suggestionService.generateDifferentSuggestions()
+        }
+    }
+
+    /// Story 4.2 AC3: Generates variations of a specific suggestion ("More like this")
+    private func moreLikeThis(_ suggestion: String) {
+        let impact = UIImpactFeedbackGenerator(style: .light)
+        impact.impactOccurred()
+        Task {
+            await suggestionService.generateVariations(of: suggestion)
+        }
     }
 }
 

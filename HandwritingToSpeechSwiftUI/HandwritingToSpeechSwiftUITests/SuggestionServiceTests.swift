@@ -370,4 +370,153 @@ final class SuggestionServiceTests: XCTestCase {
         XCTAssertTrue(service.suggestions.isEmpty)
         XCTAssertEqual(mockProvider.generateCallCount, 0)
     }
+
+    // MARK: - Story 4.2: Guided Generation Tests (M1 Fix)
+
+    func testGenerateGuidedSuggestions_SetsGuidanceContext() async {
+        // Given
+        XCTAssertNil(service.currentGuidance)
+
+        // When
+        await service.generateGuidedSuggestions(context: .greeting)
+
+        // Then
+        XCTAssertEqual(service.currentGuidance, .greeting)
+        XCTAssertEqual(mockProvider.generateCallCount, 1)
+    }
+
+    func testGenerateGuidedSuggestions_UsesDisplayNameAsDefaultPrompt() async {
+        // When
+        await service.generateGuidedSuggestions(context: .greeting)
+
+        // Then
+        XCTAssertEqual(mockProvider.lastPrompt, "Salutation")
+    }
+
+    func testGenerateGuidedSuggestions_UsesCustomPromptWhenProvided() async {
+        // When
+        await service.generateGuidedSuggestions(context: .greeting, prompt: "Custom greeting")
+
+        // Then
+        XCTAssertEqual(mockProvider.lastPrompt, "Custom greeting")
+    }
+
+    func testGenerateGuidedSuggestions_ClearsLastSelectedSuggestion() async {
+        // Given - set a lastSelectedSuggestion through generateVariations
+        await service.generateVariations(of: "Test suggestion")
+        XCTAssertEqual(service.lastSelectedSuggestion, "Test suggestion")
+
+        // When
+        await service.generateGuidedSuggestions(context: .question)
+
+        // Then - lastSelectedSuggestion should be cleared
+        XCTAssertNil(service.lastSelectedSuggestion)
+    }
+
+    func testGenerateVariations_SetsLastSelectedSuggestion() async {
+        // When
+        await service.generateVariations(of: "Bonjour tout le monde")
+
+        // Then
+        XCTAssertEqual(service.lastSelectedSuggestion, "Bonjour tout le monde")
+        XCTAssertEqual(mockProvider.generateCallCount, 1)
+    }
+
+    func testGenerateVariations_UsesSuggestionAsPromptWhenNoLastPrompt() async {
+        // When - no previous guidance, so lastPrompt is empty
+        await service.generateVariations(of: "Specific suggestion")
+
+        // Then - uses the suggestion itself as prompt
+        XCTAssertEqual(mockProvider.lastPrompt, "Specific suggestion")
+    }
+
+    func testGenerateVariations_UsesLastPromptWhenAvailable() async {
+        // Given - first set a guidance context to populate lastPrompt
+        await service.generateGuidedSuggestions(context: .greeting, prompt: "Initial prompt")
+
+        // When
+        await service.generateVariations(of: "Variation source")
+
+        // Then - uses lastPrompt, not the variation source
+        XCTAssertEqual(mockProvider.lastPrompt, "Initial prompt")
+        XCTAssertEqual(service.lastSelectedSuggestion, "Variation source")
+    }
+
+    func testGenerateDifferentSuggestions_ClearsLastSelectedSuggestion() async {
+        // Given - set up prior state
+        await service.generateGuidedSuggestions(context: .greeting)
+        await service.generateVariations(of: "Some suggestion")
+        XCTAssertNotNil(service.lastSelectedSuggestion)
+
+        // When
+        await service.generateDifferentSuggestions()
+
+        // Then
+        XCTAssertNil(service.lastSelectedSuggestion)
+    }
+
+    func testGenerateDifferentSuggestions_UsesLastPrompt() async {
+        // Given
+        await service.generateGuidedSuggestions(context: .question, prompt: "Original prompt")
+        mockProvider.generateCallCount = 0  // Reset for clarity
+
+        // When
+        await service.generateDifferentSuggestions()
+
+        // Then
+        XCTAssertEqual(mockProvider.lastPrompt, "Original prompt")
+        XCTAssertEqual(mockProvider.generateCallCount, 1)
+    }
+
+    func testGenerateDifferentSuggestions_FallsBackToGuidanceWhenNoLastPrompt() async {
+        // Given - clear state, then set guidance without custom prompt
+        service.clearGuidance()
+        service.currentGuidance = .thanks  // Set directly for test
+
+        // When
+        await service.generateDifferentSuggestions()
+
+        // Then - uses guidance displayName as fallback (M2 fix)
+        XCTAssertEqual(mockProvider.lastPrompt, "Remerciement")
+    }
+
+    func testGenerateDifferentSuggestions_DoesNothingWithoutContext() async {
+        // Given - no lastPrompt and no guidance
+        service.clearGuidance()
+
+        // When
+        await service.generateDifferentSuggestions()
+
+        // Then - no API call (logged warning only)
+        XCTAssertEqual(mockProvider.generateCallCount, 0)
+    }
+
+    func testClearGuidance_ClearsAllGuidanceState() async {
+        // Given - set up guidance state
+        await service.generateGuidedSuggestions(context: .greeting, prompt: "Test")
+        await service.generateVariations(of: "Some suggestion")
+        XCTAssertNotNil(service.currentGuidance)
+        XCTAssertNotNil(service.lastSelectedSuggestion)
+
+        // When
+        service.clearGuidance()
+
+        // Then
+        XCTAssertNil(service.currentGuidance)
+        XCTAssertNil(service.lastSelectedSuggestion)
+    }
+
+    func testErrorClearsGuidanceState() async {
+        // Given - set up guidance state
+        await service.generateGuidedSuggestions(context: .greeting)
+        XCTAssertNotNil(service.currentGuidance)
+
+        // When - error occurs
+        mockProvider.errorToThrow = .networkUnavailable
+        await service.generateSuggestions(for: "Test")
+
+        // Then - H3 fix: guidance state should be cleared on error
+        XCTAssertNil(service.currentGuidance)
+        XCTAssertNil(service.lastSelectedSuggestion)
+    }
 }

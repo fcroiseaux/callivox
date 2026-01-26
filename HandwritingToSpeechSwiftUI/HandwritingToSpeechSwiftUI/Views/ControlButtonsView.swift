@@ -146,6 +146,7 @@ struct ControlButtonsView: View {
     @State private var showUsageSettings: Bool = false
     @State private var showLLMSettings: Bool = false
     @State private var showPersonalizationSettings: Bool = false
+    @State private var showGradiumSettings: Bool = false
     
     var body: some View {
         VStack(spacing: 20) {
@@ -222,6 +223,31 @@ struct ControlButtonsView: View {
             .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
             .accessibilityLabel("Gérer les phrases prédéfinies")
             .accessibilityHint("Ouvre la gestion des phrases rapides")
+
+            // Bouton paramètres TTS Gradium
+            Button(action: {
+                showGradiumSettings = true
+            }) {
+                HStack {
+                    Text("Service TTS")
+                        .font(.title2)
+                    Image(systemName: "waveform")
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.mint, Color.mint.opacity(0.8)]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .cornerRadius(10)
+            }
+            .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
+            .accessibilityLabel("Paramètres du service TTS")
+            .accessibilityHint("Configurer la clé API Gradium pour la synthèse vocale")
 
             // Bouton paramètres IA (Story 3.1 AC4)
             Button(action: {
@@ -373,6 +399,11 @@ struct ControlButtonsView: View {
         .sheet(isPresented: $showPersonalizationSettings) {
             NavigationView {
                 PersonalizationSettingsView()
+            }
+        }
+        .sheet(isPresented: $showGradiumSettings) {
+            NavigationView {
+                GradiumSettingsView()
             }
         }
     }

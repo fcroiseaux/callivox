@@ -42,6 +42,14 @@ class OpenAICompatibleLLMProvider: ObservableObject, LLMProvider {
     private let keychainKey = AppConfig.LLM.keychainKey
     private let endpointKeychainKey = "\(AppConfig.LLM.keychainKey)_endpoint"
 
+    // MARK: - Guidance Properties (Story 4.2)
+
+    /// Current guidance context for generating context-specific suggestions (AC2)
+    var guidanceContext: GuidanceContext?
+
+    /// Reference suggestion for "more like this" feature (AC3)
+    var moreLikeThis: String?
+
     // MARK: - Initialization
 
     init() {
@@ -156,7 +164,7 @@ class OpenAICompatibleLLMProvider: ObservableObject, LLMProvider {
     }
 
     /// System prompt for the LLM to generate suggestions.
-    /// Now includes personalization settings (Story 4.1, AC5).
+    /// Includes personalization settings (Story 4.1) and guidance context (Story 4.2).
     private func buildSystemPrompt() -> String {
         // Load user's personalization settings
         let config = PersonalizationConfig.loadFromUserDefaults()
@@ -179,6 +187,16 @@ class OpenAICompatibleLLMProvider: ObservableObject, LLMProvider {
         let trimmedContext = config.personalContext.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedContext.isEmpty {
             prompt += " Contexte personnel de l'utilisateur: \(trimmedContext)"
+        }
+
+        // Add guidance context (Story 4.2 - AC2)
+        if let guidance = guidanceContext {
+            prompt += " \(guidance.promptInstruction)"
+        }
+
+        // Add "more like this" instruction (Story 4.2 - AC3)
+        if let reference = moreLikeThis {
+            prompt += " Génère des variations similaires à: \"\(reference)\""
         }
 
         return prompt

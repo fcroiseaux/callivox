@@ -40,6 +40,14 @@ class SuggestionService: ObservableObject {
     /// Error message for display (AC4: French messages)
     @Published private(set) var errorMessage = ""
 
+    // MARK: - Guidance Properties (Story 4.2)
+
+    /// Current guidance context for suggestions (AC1, AC2)
+    @Published var currentGuidance: GuidanceContext?
+
+    /// Last selected suggestion for "more like this" feature (AC3)
+    @Published private(set) var lastSelectedSuggestion: String?
+
     // MARK: - Private Properties
 
     /// LLM provider for generating suggestions
@@ -50,6 +58,9 @@ class SuggestionService: ObservableObject {
 
     /// Maximum number of exchanges to keep in history (6 exchanges = 12 messages)
     private let maxHistoryExchanges = 6
+
+    /// Last prompt used for "different" feature (Story 4.2 - AC4)
+    private var lastPrompt: String = ""
 
     // MARK: - Initialization
 
@@ -92,6 +103,12 @@ class SuggestionService: ObservableObject {
         do {
             // AC3: Use provided context or fall back to conversation history
             let historyContext = context ?? conversationHistory
+
+            // Story 4.2: Pass guidance context to provider before generation
+            if let concreteProvider = llmProvider as? OpenAICompatibleLLMProvider {
+                concreteProvider.guidanceContext = currentGuidance
+                concreteProvider.moreLikeThis = lastSelectedSuggestion
+            }
 
             // AC2: Generate suggestions (target < 500ms, 2s timeout handled by provider)
             let newSuggestions = try await llmProvider.generateSuggestions(
@@ -161,10 +178,64 @@ class SuggestionService: ObservableObject {
         conversationHistory.count
     }
 
+    // MARK: - Guided Generation Methods (Story 4.2)
+
+    /// Generates suggestions with a specific guidance context.
+    /// AC2: Guidance context influences the type of suggestions generated.
+    /// AC6: Conversation history is still considered.
+    ///
+    /// - Parameters:
+    ///   - context: The guidance context to apply
+    ///   - prompt: Optional custom prompt (defaults to context displayName)
+    func generateGuidedSuggestions(context: GuidanceContext, prompt: String? = nil) async {
+        currentGuidance = context
+        lastSelectedSuggestion = nil  // Clear "more like this" state
+        let effectivePrompt = prompt ?? context.displayName
+        lastPrompt = effectivePrompt
+        await generateSuggestions(for: effectivePrompt)
+    }
+
+    /// Generates variations of a specific suggestion (AC3: "More like this").
+    /// The reference suggestion is stored and used by the LLM provider
+    /// to generate similar suggestions in tone and content.
+    ///
+    /// - Parameter suggestion: The suggestion to generate variations of
+    func generateVariations(of suggestion: String) async {
+        lastSelectedSuggestion = suggestion
+        // Use last prompt if available, otherwise use the suggestion itself
+        let effectivePrompt = lastPrompt.isEmpty ? suggestion : lastPrompt
+        await generateSuggestions(for: effectivePrompt)
+    }
+
+    /// Generates completely different suggestions (AC4: "Different").
+    /// Clears the "more like this" reference and requests fresh suggestions.
+    /// M2 Fix: If no previous prompt exists, uses current guidance or logs warning.
+    func generateDifferentSuggestions() async {
+        // Clear last selected to signal "different" mode
+        lastSelectedSuggestion = nil
+        if !lastPrompt.isEmpty {
+            await generateSuggestions(for: lastPrompt)
+        } else if let guidance = currentGuidance {
+            // M2 Fix: Fallback to current guidance context if no lastPrompt
+            await generateSuggestions(for: guidance.displayName)
+        } else {
+            // M2 Fix: Log warning when no context available for "different"
+            print("SuggestionService [WARNING]: generateDifferentSuggestions() called with no lastPrompt or guidance context")
+        }
+    }
+
+    /// Clears guidance context and related state.
+    func clearGuidance() {
+        currentGuidance = nil
+        lastSelectedSuggestion = nil
+        lastPrompt = ""
+    }
+
     // MARK: - Private Methods
 
     /// AC4: Handle errors with French messages and recovery suggestions.
     /// Maps various error types to LLMError and displays user-friendly messages.
+    /// H3 Fix: Also clears guidance state to prevent inconsistent UI state after errors.
     private func handleError(_ error: Error) {
         let llmError: LLMError
 
@@ -187,6 +258,9 @@ class SuggestionService: ObservableObject {
 
         showError = true
         isLoading = false
+
+        // H3 Fix: Clear guidance state on error to prevent inconsistent UI
+        clearGuidance()
 
         // Never silent - always log for debugging (AC4)
         print("SuggestionService [ERROR]: \(llmError.failureReason ?? "unknown") - \(errorMessage)")

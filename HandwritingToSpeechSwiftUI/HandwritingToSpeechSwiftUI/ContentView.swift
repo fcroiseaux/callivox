@@ -124,7 +124,7 @@ struct ContentView: View {
                     }
                 )
 
-                // Story 3.3: AI Suggestions section
+                // Story 3.3 + 4.2: AI Suggestions section with guidance controls
                 VStack(alignment: .leading, spacing: 8) {
                     // Generate suggestions button
                     HStack {
@@ -133,6 +133,10 @@ struct ContentView: View {
                         Spacer()
                     }
                     .padding(.horizontal)
+
+                    // Story 4.2: Quick guidance controls (AC1, AC6)
+                    GuidanceControlsView()
+                        .padding(.top, 4)
 
                     // Suggestion display (shows when suggestions available)
                     SuggestionView(
