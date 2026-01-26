@@ -53,10 +53,10 @@ class PCMStreamPlayer: ObservableObject {
     // MARK: - Initialization
 
     init() {
-        // Initialize PCM format: 24kHz, Int16, Mono
+        // Initialize PCM format: 48kHz, Int16, Mono (Gradium TTS native format)
         self.format = AVAudioFormat(
             commonFormat: .pcmFormatInt16,
-            sampleRate: 24000,
+            sampleRate: 48000,
             channels: 1,
             interleaved: false
         )

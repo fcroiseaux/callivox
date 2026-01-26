@@ -82,11 +82,11 @@ final class GradiumTTSProviderTests: XCTestCase {
     // MARK: - AppConfig Integration Tests
 
     func testUsesCorrectApiEndpoint() {
-        XCTAssertEqual(AppConfig.Gradium.apiEndpoint, "https://eu.api.gradium.ai/api/tts")
+        XCTAssertEqual(AppConfig.Gradium.apiEndpoint, "wss://eu.api.gradium.ai/api/speech/tts")
     }
 
     func testUsesCorrectDefaultVoice() {
-        XCTAssertEqual(AppConfig.Gradium.defaultVoiceId, "olivier")
+        XCTAssertEqual(AppConfig.Gradium.defaultVoiceId, "axlOaUiFyOZhy4nv")
     }
 
     func testUsesCorrectOutputFormat() {

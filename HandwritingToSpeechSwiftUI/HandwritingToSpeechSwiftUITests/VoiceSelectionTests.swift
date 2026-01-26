@@ -31,17 +31,17 @@ final class VoiceSelectionTests: XCTestCase {
         XCTAssertEqual(AppConfig.VoiceConfig.userDefaultsKey, "selected_voice_id")
     }
 
-    func testVoiceConfigDefaultVoiceIdIsOlivier() {
-        // AC4: Default voice for French locale is "olivier"
-        XCTAssertEqual(AppConfig.VoiceConfig.defaultVoiceId, "olivier")
+    func testVoiceConfigDefaultVoiceIdIsLeo() {
+        // AC4: Default voice for French locale is "Leo"
+        XCTAssertEqual(AppConfig.VoiceConfig.defaultVoiceId, "axlOaUiFyOZhy4nv")
     }
 
-    func testVoiceConfigAvailableVoicesContainsOlivier() {
-        // AC1: Available voices include "Olivier" for French
-        let olivierVoice = AppConfig.VoiceConfig.availableVoices.first { $0.id == "olivier" }
-        XCTAssertNotNil(olivierVoice)
-        XCTAssertEqual(olivierVoice?.name, "Olivier")
-        XCTAssertEqual(olivierVoice?.description, "Voix masculine française")
+    func testVoiceConfigAvailableVoicesContainsLeo() {
+        // AC1: Available voices include "Leo" for French
+        let leoVoice = AppConfig.VoiceConfig.availableVoices.first { $0.id == "axlOaUiFyOZhy4nv" }
+        XCTAssertNotNil(leoVoice)
+        XCTAssertEqual(leoVoice?.name, "Leo")
+        XCTAssertEqual(leoVoice?.description, "Voix masculine française")
     }
 
     func testVoiceConfigPreviewTextTemplateContainsPlaceholder() {
@@ -84,11 +84,11 @@ final class VoiceSelectionTests: XCTestCase {
         XCTAssertEqual(AppConfig.VoiceConfig.defaultVoiceId, AppConfig.Gradium.defaultVoiceId)
     }
 
-    func testFrenchLocaleDefaultVoiceIsOlivier() {
-        // AC4: "olivier" is used as the default voice for French locale
+    func testFrenchLocaleDefaultVoiceIsLeo() {
+        // AC4: "Leo" is used as the default voice for French locale
         // This test validates the configuration constant
         let defaultVoice = AppConfig.VoiceConfig.defaultVoiceId
-        XCTAssertEqual(defaultVoice, "olivier")
+        XCTAssertEqual(defaultVoice, "axlOaUiFyOZhy4nv")
     }
 
     // MARK: - Voice List Validation Tests

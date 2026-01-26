@@ -48,11 +48,11 @@ struct AppConfig {
 
     // Gradium TTS Configuration
     struct Gradium {
-        /// Gradium TTS API endpoint (EU region)
-        static let apiEndpoint = "https://eu.api.gradium.ai/api/tts"
+        /// Gradium TTS WebSocket endpoint (EU region)
+        static let apiEndpoint = "wss://eu.api.gradium.ai/api/speech/tts"
 
-        /// Default voice ID for French
-        static let defaultVoiceId = "olivier"
+        /// Default voice ID for French (Leo)
+        static let defaultVoiceId = "axlOaUiFyOZhy4nv"
 
         /// Output format for audio (PCM 24kHz Int16 Mono)
         static let outputFormat = "pcm"
@@ -72,12 +72,12 @@ struct AppConfig {
         /// UserDefaults key for persisting voice preference
         static let userDefaultsKey = "selected_voice_id"
 
-        /// Default voice ID for French locale users
-        static let defaultVoiceId = "olivier"
+        /// Default voice ID for French locale users (Leo)
+        static let defaultVoiceId = "axlOaUiFyOZhy4nv"
 
         /// Available Gradium voices with display metadata
         static let availableVoices: [(id: String, name: String, description: String)] = [
-            ("olivier", "Olivier", "Voix masculine française")
+            ("axlOaUiFyOZhy4nv", "Leo", "Voix masculine française")
         ]
 
         /// Sample text for voice preview

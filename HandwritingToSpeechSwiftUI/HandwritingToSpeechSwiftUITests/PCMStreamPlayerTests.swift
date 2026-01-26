@@ -191,10 +191,10 @@ final class PCMStreamPlayerTests: XCTestCase {
 
     func testPCMFormatIs24kHzInt16Mono() {
         // This test verifies the expected format is used
-        // The player should handle 24kHz Int16 Mono PCM data
+        // The player should handle 48kHz Int16 Mono PCM data (Gradium TTS native format)
 
-        // Given: PCM data with correct format (24kHz, Int16, Mono)
-        let sampleCount = 24000  // 1 second of audio at 24kHz
+        // Given: PCM data with correct format (48kHz, Int16, Mono)
+        let sampleCount = 48000  // 1 second of audio at 48kHz
         let pcmData = createMockPCMData(sampleCount: sampleCount)
 
         // When: Data is scheduled
