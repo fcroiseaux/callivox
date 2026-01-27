@@ -119,8 +119,9 @@ struct SuggestionView: View {
 
     // MARK: - Header View
 
+    // Story 5.3: Added spacing: 12 for accessibility (AC3)
     private var headerView: some View {
-        HStack {
+        HStack(spacing: 12) {
             Text("Suggestions IA")
                 .font(.headline)
                 .foregroundColor(.secondary)
@@ -139,18 +140,20 @@ struct SuggestionView: View {
             Spacer()
 
             // Story 4.2: "Different" button (AC4)
+            // Story 5.3: Enlarged touch target to min 44pt height (AC4)
             Button(action: generateDifferent) {
                 HStack(spacing: 4) {
                     Image(systemName: "shuffle")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 14, weight: .medium))  // Story 5.3: Increased from 12pt (proportional)
                     Text("Autre")
                         .font(.caption)
                 }
                 .foregroundColor(.secondary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
+                .padding(.horizontal, 12)  // Story 5.3: Increased from 10pt (proportional)
+                .padding(.vertical, 12)  // Story 5.3: Increased from 6pt (AC4)
                 .background(Color(.systemGray5))
-                .cornerRadius(8)
+                .cornerRadius(10)  // Story 5.3: Proportional increase from 8pt
+                .frame(minHeight: 44)  // Story 5.3: Explicit 44pt minimum (AC4)
             }
             .buttonStyle(ScaleButtonStyle(scaleAmount: 0.9, pressedColor: .clear, normalColor: .clear))
             .disabled(suggestionService.isLoading || suggestionService.suggestions.isEmpty)
@@ -159,13 +162,14 @@ struct SuggestionView: View {
             .accessibilityHint("Génère des suggestions complètement différentes")
 
             // AC3: Refresh button
+            // Story 5.3: Enlarged touch target to 44x44pt (AC1)
             Button(action: refreshSuggestions) {
                 Image(systemName: "arrow.clockwise")
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.system(size: 18, weight: .medium))  // Story 5.3: Increased from 16pt (proportional)
                     .foregroundColor(.secondary)
-                    .frame(width: 32, height: 32)
+                    .frame(width: 44, height: 44)  // Story 5.3: Increased from 32pt (AC1)
                     .background(Color(.systemGray5))
-                    .cornerRadius(8)
+                    .cornerRadius(10)  // Story 5.3: Proportional increase from 8pt
             }
             .buttonStyle(ScaleButtonStyle(scaleAmount: 0.9, pressedColor: .clear, normalColor: .clear))
             .disabled(suggestionService.isLoading || currentText.isEmpty)
@@ -177,13 +181,14 @@ struct SuggestionView: View {
                 : "Génère de nouvelles suggestions basées sur le texte actuel")
 
             // AC3: Dismiss button
+            // Story 5.3: Enlarged touch target to 44x44pt (AC2)
             Button(action: dismissSuggestions) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 16, weight: .medium))  // Story 5.3: Increased from 14pt (proportional)
                     .foregroundColor(.secondary)
-                    .frame(width: 32, height: 32)
+                    .frame(width: 44, height: 44)  // Story 5.3: Increased from 32pt (AC2)
                     .background(Color(.systemGray5))
-                    .cornerRadius(8)
+                    .cornerRadius(10)  // Story 5.3: Proportional increase from 8pt
             }
             .buttonStyle(ScaleButtonStyle(scaleAmount: 0.9, pressedColor: .clear, normalColor: .clear))
             .accessibilityLabel("Fermer les suggestions")
@@ -262,7 +267,8 @@ struct SuggestionView: View {
     /// Story 4.2 AC4: Generates completely different suggestions
     private func generateDifferent() {
         // H2 Fix: Add haptic feedback (Task 5 requirement)
-        let impact = UIImpactFeedbackGenerator(style: .light)
+        // Story 5.3: Upgraded haptic from .light to .medium for accessibility
+        let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
         Task {
             await suggestionService.generateDifferentSuggestions()
@@ -273,11 +279,9 @@ struct SuggestionView: View {
     /// F5 Fix: Skip if in edit mode (suggestions frozen)
     private func moreLikeThis(_ suggestion: String) {
         // F5 Fix: Guard against frozen state
-        guard !suggestionService.isEditingText else {
-            print("SuggestionView: moreLikeThis skipped - edit mode active")
-            return
-        }
-        let impact = UIImpactFeedbackGenerator(style: .light)
+        guard !suggestionService.isEditingText else { return }
+        // Story 5.3: Upgraded haptic from .light to .medium for accessibility consistency
+        let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
         Task {
             await suggestionService.generateVariations(of: suggestion)
@@ -289,8 +293,8 @@ struct SuggestionView: View {
     /// InvincibleVoice: Copies suggestion to text field for editing.
     /// Freezes suggestions to prevent auto-refresh during editing.
     private func editSuggestion(_ suggestion: String) {
-        // Haptic feedback
-        let impact = UIImpactFeedbackGenerator(style: .light)
+        // Story 5.3: Upgraded haptic from .light to .medium for accessibility consistency
+        let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
 
         // Freeze suggestions (prevent auto-refresh during editing)
@@ -298,8 +302,6 @@ struct SuggestionView: View {
 
         // Notify callback to copy suggestion to text field
         onEditSuggestion?(suggestion)
-
-        print("SuggestionView: Edit mode - copied suggestion to text field")
     }
 }
 
