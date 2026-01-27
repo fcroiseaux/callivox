@@ -73,11 +73,11 @@ development_status:
 
   # Epic 5: Essential Touch Accessibility
   # Users with motor impairments can reliably interact with all core UI elements
-  epic-5: in-progress
+  epic-5: done
   5-1-enlarge-keyword-chips-touch-targets: done
   5-2-enlarge-guidance-controls-touch-targets: done
-  5-3-enlarge-suggestion-header-buttons: backlog
-  5-4-replace-horizontal-scroll-with-grid-for-keywords: backlog
+  5-3-enlarge-suggestion-header-buttons: done
+  5-4-replace-horizontal-scroll-with-grid-for-keywords: done
   epic-5-retrospective: optional
 
   # Epic 6: Simplified Navigation

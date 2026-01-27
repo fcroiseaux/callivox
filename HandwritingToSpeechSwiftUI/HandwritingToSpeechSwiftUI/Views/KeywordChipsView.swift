@@ -3,7 +3,7 @@
 //  HandwritingToSpeechSwiftUI
 //
 //  InvincibleVoice: Quick keyword chips for rapid responses.
-//  Displays horizontal scrollable keyword buttons that speak immediately on tap.
+//  Story 5.4: Displays keywords in a grid layout for accessibility (no swiping required).
 //  Created by CalliVox on 2026-01-27.
 //
 
@@ -12,11 +12,12 @@ import UIKit
 
 // MARK: - KeywordChipsView
 
-/// Horizontal scrollable view of keyword chips for quick responses.
+/// Grid view of keyword chips for quick responses (accessibility optimized).
 /// Each chip speaks the keyword immediately via TTS when tapped.
 ///
 /// InvincibleVoice Integration:
-/// - Displays 10 quick keywords from LLM response
+/// - Displays 10 quick keywords from LLM response in a grid layout
+/// - Story 5.4: Grid layout eliminates swiping for users with motor impairments
 /// - Tap to speak keyword immediately
 /// - Visual feedback on selection
 @MainActor
@@ -34,22 +35,25 @@ struct KeywordChipsView: View {
                     .foregroundColor(.secondary)
                     .padding(.horizontal)
 
-                // Keyword chips - horizontal scroll
-                // Story 5.1: Increased spacing from 8pt to 12pt for better touch target separation
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
-                        ForEach(suggestionService.keywords, id: \.self) { keyword in
-                            KeywordChip(
-                                keyword: keyword,
-                                onTap: { speakKeyword(keyword) }
-                            )
-                        }
+                // Story 5.4: Replaced horizontal scroll with grid layout for accessibility (AC1)
+                // Users with tremors can see all keywords without swiping gestures
+                // Note: 12pt spacing preserved from Story 5.1 touch target improvements
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 100), spacing: 12)],  // Story 5.4 AC1: Adaptive columns, min 100pt
+                    spacing: 12  // Story 5.4 AC3: 12pt spacing (originally Story 5.1)
+                ) {
+                    ForEach(suggestionService.keywords, id: \.self) { keyword in
+                        KeywordChip(
+                            keyword: keyword,
+                            onTap: { speakKeyword(keyword) }
+                        )
                     }
-                    .padding(.horizontal)
                 }
+                .padding(.horizontal)
             }
             .accessibilityElement(children: .contain)
             .accessibilityLabel("Mots-clés de réponse rapide")
+            .accessibilityHint("Grille de réponses rapides, naviguez avec les gestes de balayage")  // Story 5.4: Grid navigation hint
         }
     }
 
