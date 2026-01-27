@@ -86,7 +86,7 @@ final class GradiumTTSProviderTests: XCTestCase {
     }
 
     func testUsesCorrectDefaultVoice() {
-        XCTAssertEqual(AppConfig.Gradium.defaultVoiceId, "axlOaUiFyOZhy4nv")
+        XCTAssertEqual(AppConfig.Gradium.defaultVoiceId, "m46-aSD529HCahBS")
     }
 
     func testUsesCorrectOutputFormat() {

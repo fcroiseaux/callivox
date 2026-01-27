@@ -33,12 +33,12 @@ final class VoiceSelectionTests: XCTestCase {
 
     func testVoiceConfigDefaultVoiceIdIsLeo() {
         // AC4: Default voice for French locale is "Leo"
-        XCTAssertEqual(AppConfig.VoiceConfig.defaultVoiceId, "axlOaUiFyOZhy4nv")
+        XCTAssertEqual(AppConfig.VoiceConfig.defaultVoiceId, "m46-aSD529HCahBS")
     }
 
     func testVoiceConfigAvailableVoicesContainsLeo() {
         // AC1: Available voices include "Leo" for French
-        let leoVoice = AppConfig.VoiceConfig.availableVoices.first { $0.id == "axlOaUiFyOZhy4nv" }
+        let leoVoice = AppConfig.VoiceConfig.availableVoices.first { $0.id == "m46-aSD529HCahBS" }
         XCTAssertNotNil(leoVoice)
         XCTAssertEqual(leoVoice?.name, "Leo")
         XCTAssertEqual(leoVoice?.description, "Voix masculine française")
@@ -88,7 +88,7 @@ final class VoiceSelectionTests: XCTestCase {
         // AC4: "Leo" is used as the default voice for French locale
         // This test validates the configuration constant
         let defaultVoice = AppConfig.VoiceConfig.defaultVoiceId
-        XCTAssertEqual(defaultVoice, "axlOaUiFyOZhy4nv")
+        XCTAssertEqual(defaultVoice, "m46-aSD529HCahBS")
     }
 
     // MARK: - Voice List Validation Tests
