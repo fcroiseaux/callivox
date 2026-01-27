@@ -124,10 +124,12 @@ struct ContentView: View {
                     onSpeak: {
                         speechService.speakText(recognizedText)
                         recognizedText = ""
+                        // InvincibleVoice: Unfreeze suggestions after speaking
+                        suggestionService.unfreezeSuggestions()
                     }
                 )
 
-                // Story 3.3 + 4.2: AI Suggestions section with guidance controls
+                // Story 3.3 + 4.2 + InvincibleVoice: AI Suggestions section
                 VStack(alignment: .leading, spacing: 8) {
                     // Generate suggestions button
                     HStack {
@@ -141,12 +143,21 @@ struct ContentView: View {
                     GuidanceControlsView()
                         .padding(.top, 4)
 
+                    // InvincibleVoice: Quick keyword chips (shows when keywords available)
+                    KeywordChipsView()
+
                     // Suggestion display (shows when suggestions available)
                     SuggestionView(
                         currentText: recognizedText,
                         onSuggestionSelected: { _ in
                             // Clear text field after selection (TTS already triggered by SuggestionView)
                             recognizedText = ""
+                            // InvincibleVoice: Unfreeze suggestions after speaking
+                            suggestionService.unfreezeSuggestions()
+                        },
+                        onEditSuggestion: { suggestion in
+                            // InvincibleVoice: Copy suggestion to text field for editing
+                            recognizedText = suggestion
                         }
                     )
                 }
@@ -246,20 +257,27 @@ struct ContentView: View {
     
     private func handleTextChange(oldValue: String, newValue: String) {
         speakTask?.cancel()
-        
+
         let corrected = speechService.correctText(newValue)
         if corrected != newValue {
             recognizedText = corrected
         }
-        
+
+        // InvincibleVoice: Unfreeze suggestions when text is cleared
+        if corrected.isEmpty && !oldValue.isEmpty {
+            suggestionService.unfreezeSuggestions()
+        }
+
         if autoRead && !corrected.isEmpty {
             speakTask = Task {
                 try? await Task.sleep(for: .seconds(3))
-                
+
                 guard !Task.isCancelled else { return }
-                
+
                 speechService.speakText(corrected)
                 recognizedText = ""
+                // InvincibleVoice: Unfreeze suggestions after auto-read
+                suggestionService.unfreezeSuggestions()
             }
         }
     }

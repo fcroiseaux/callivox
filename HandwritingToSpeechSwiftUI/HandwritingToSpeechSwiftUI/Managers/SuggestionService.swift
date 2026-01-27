@@ -3,6 +3,7 @@
 //  HandwritingToSpeechSwiftUI
 //
 //  Story 3.2: Multi-Suggestion Generation
+//  InvincibleVoice: Keywords + Edit Mode support
 //  Service for generating and managing AI response suggestions.
 //  Created by CalliVox on 2026-01-26.
 //
@@ -13,10 +14,16 @@ import Foundation
 /// Uses OpenAICompatibleLLMProvider to generate multiple suggestions
 /// based on conversation context.
 ///
+/// InvincibleVoice Integration:
+/// - Generates quick keywords (10) for rapid responses
+/// - Generates full answer suggestions (4) for detailed responses
+/// - Supports edit mode to freeze suggestions during text editing
+///
 /// Usage:
 /// ```swift
 /// let service = SuggestionService.shared
 /// await service.generateSuggestions(for: "Comment ça va ?")
+/// // service.keywords: ["Oui", "Non", "Bien", ...]
 /// // service.suggestions: ["Très bien, merci !", "Ça va bien, et toi ?", ...]
 /// ```
 @MainActor
@@ -31,6 +38,9 @@ class SuggestionService: ObservableObject {
     /// Current list of generated suggestions (AC1: 3-5 distinct suggestions)
     @Published private(set) var suggestions: [String] = []
 
+    /// InvincibleVoice: Quick response keywords (target: 10 items)
+    @Published private(set) var keywords: [String] = []
+
     /// Loading state for UI binding (AC2)
     @Published private(set) var isLoading = false
 
@@ -39,6 +49,12 @@ class SuggestionService: ObservableObject {
 
     /// Error message for display (AC4: French messages)
     @Published private(set) var errorMessage = ""
+
+    // MARK: - Edit Mode Properties (InvincibleVoice)
+
+    /// When true, suggestion generation is frozen (edit mode active)
+    /// F6 Fix: private(set) - only modified via freeze/unfreeze methods
+    @Published private(set) var isEditingText = false
 
     // MARK: - Guidance Properties (Story 4.2)
 
@@ -83,15 +99,23 @@ class SuggestionService: ObservableObject {
     /// AC2: Shows loading indicator while waiting
     /// AC3: Includes conversation history for context
     /// AC5: Handles partial text input
+    /// InvincibleVoice: Also populates keywords array
     ///
     /// - Parameters:
     ///   - prompt: The text to generate suggestions for
     ///   - context: Optional explicit context (overrides internal history)
     func generateSuggestions(for prompt: String, context: [String]? = nil) async {
+        // InvincibleVoice: Skip generation if in edit mode (freeze suggestions)
+        guard !isEditingText else {
+            print("SuggestionService: Skipping generation - edit mode active")
+            return
+        }
+
         // AC5: Empty or whitespace-only prompt returns empty suggestions
         let trimmedPrompt = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedPrompt.isEmpty else {
             suggestions = []
+            keywords = []
             return
         }
 
@@ -108,25 +132,41 @@ class SuggestionService: ObservableObject {
             if let concreteProvider = llmProvider as? OpenAICompatibleLLMProvider {
                 concreteProvider.guidanceContext = currentGuidance
                 concreteProvider.moreLikeThis = lastSelectedSuggestion
+
+                // InvincibleVoice: Use new JSON method for keywords + answers
+                let response = try await concreteProvider.generateSuggestionsWithKeywords(
+                    prompt: prompt,
+                    context: historyContext.isEmpty ? nil : historyContext
+                )
+
+                // Populate both keywords and suggestions
+                keywords = response.suggestedKeywords
+                let uniqueSuggestions = response.suggestedAnswers.removingDuplicates()
+                suggestions = Array(uniqueSuggestions.prefix(AppConfig.LLM.suggestionCount))
+
+                print("SuggestionService: Generated \(keywords.count) keywords and \(suggestions.count) suggestions for: \(prompt.prefix(30))...")
+            } else {
+                // Fallback for non-OpenAI providers
+                let newSuggestions = try await llmProvider.generateSuggestions(
+                    prompt: prompt,
+                    context: historyContext.isEmpty ? nil : historyContext
+                )
+
+                // AC1: Ensure distinct suggestions, limited to configured count
+                let uniqueSuggestions = newSuggestions.removingDuplicates()
+                suggestions = Array(uniqueSuggestions.prefix(AppConfig.LLM.suggestionCount))
+                // Set default keywords for fallback (F2 Fix: use centralized constant)
+                keywords = SuggestionResponse.defaultKeywords
+
+                print("SuggestionService: Generated \(suggestions.count) suggestions (fallback) for: \(prompt.prefix(30))...")
             }
 
-            // AC2: Generate suggestions (target < 500ms, 2s timeout handled by provider)
-            let newSuggestions = try await llmProvider.generateSuggestions(
-                prompt: prompt,
-                context: historyContext.isEmpty ? nil : historyContext
-            )
-
-            // AC1: Ensure distinct suggestions, limited to configured count
-            let uniqueSuggestions = newSuggestions.removingDuplicates()
-            suggestions = Array(uniqueSuggestions.prefix(AppConfig.LLM.suggestionCount))
             isLoading = false
 
             // AC1: Log warning if fewer than 3 suggestions (minimum expected)
             if suggestions.count < 3 {
                 print("SuggestionService [WARNING]: Only \(suggestions.count) suggestions returned (expected 3-5)")
             }
-
-            print("SuggestionService: Generated \(suggestions.count) suggestions for: \(prompt.prefix(30))...")
 
         } catch {
             handleError(error)
@@ -162,9 +202,32 @@ class SuggestionService: ObservableObject {
         print("SuggestionService: Conversation history cleared")
     }
 
-    /// Clears current suggestions (for UI reset).
+    /// Clears current suggestions and keywords (for UI reset).
+    /// InvincibleVoice: Also clears keywords.
     func clearSuggestions() {
         suggestions = []
+        keywords = []
+    }
+
+    /// InvincibleVoice: Clears only keywords (for independent UI control).
+    func clearKeywords() {
+        keywords = []
+    }
+
+    // MARK: - Edit Mode Methods (InvincibleVoice)
+
+    /// Freezes suggestion generation (edit mode).
+    /// Call when user starts editing text to prevent auto-refresh.
+    func freezeSuggestions() {
+        isEditingText = true
+        print("SuggestionService: Suggestions frozen (edit mode)")
+    }
+
+    /// Unfreezes suggestion generation (exit edit mode).
+    /// Call when user finishes editing (speaks text or clears).
+    func unfreezeSuggestions() {
+        isEditingText = false
+        print("SuggestionService: Suggestions unfrozen (edit mode off)")
     }
 
     /// Dismisses the current error state.
