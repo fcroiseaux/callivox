@@ -1,4 +1,4 @@
-# generated: 2026-01-26
+# generated: 2026-01-27
 # project: CalliVox
 # tracking_system: file-system
 # story_location: /Users/croiseaux/devel/CalliVox/_bmad-output/implementation-artifacts
@@ -32,13 +32,13 @@
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-01-26
+generated: 2026-01-27
 project: CalliVox
 tracking_system: file-system
 story_location: /Users/croiseaux/devel/CalliVox/_bmad-output/implementation-artifacts
 
 development_status:
-  # Epic 1: High-Quality Voice Communication
+  # Epic 1: High-Quality Voice Communication (COMPLETED)
   epic-1: done
   1-1-basic-gradium-tts-integration: done
   1-2-streaming-audio-playback: done
@@ -46,22 +46,84 @@ development_status:
   1-4-remove-elevenlabs-legacy-code: done
   epic-1-retrospective: optional
 
-  # Epic 2: Reliable Communication
+  # Epic 2: Reliable Communication (COMPLETED)
   epic-2: done
   2-1-network-monitoring-and-offline-detection: done
   2-2-avfoundation-offline-fallback: done
   2-3-graceful-error-handling: done
   epic-2-retrospective: optional
 
-  # Epic 3: AI-Assisted Responses
+  # Epic 3: AI-Assisted Responses (COMPLETED)
   epic-3: done
   3-1-llm-service-integration: done
   3-2-multi-suggestion-generation: done
   3-3-suggestion-selection-ui: done
   epic-3-retrospective: optional
 
-  # Epic 4: Personalized AI Experience
+  # Epic 4: Personalized AI Experience (COMPLETED)
   epic-4: done
   4-1-llm-personalization-settings: done
   4-2-ui-guidance-controls: done
   epic-4-retrospective: optional
+
+  # ============================================
+  # UX ACCESSIBILITY EPICS (NEW)
+  # Source: epics-ux-accessibility.md
+  # ============================================
+
+  # Epic 5: Essential Touch Accessibility
+  # Users with motor impairments can reliably interact with all core UI elements
+  epic-5: in-progress
+  5-1-enlarge-keyword-chips-touch-targets: done
+  5-2-enlarge-guidance-controls-touch-targets: done
+  5-3-enlarge-suggestion-header-buttons: backlog
+  5-4-replace-horizontal-scroll-with-grid-for-keywords: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: Simplified Navigation
+  # Users can access all features with fewer, larger, and more accessible controls
+  epic-6: backlog
+  6-1-create-modal-menu-for-guidance-contexts: backlog
+  6-2-reorganize-sidebar-separating-actions-from-settings: backlog
+  epic-6-retrospective: optional
+
+  # Epic 7: Accessibility Settings
+  # Users can customize the accessibility level to match their specific needs
+  epic-7: backlog
+  7-1-create-accessibility-settings-screen-with-enhanced-mode: backlog
+  7-2-implement-enlarged-touch-targets-in-enhanced-mode: backlog
+  7-3-implement-high-contrast-and-reduced-animations: backlog
+  7-4-add-confirmation-dialogs-for-destructive-actions: backlog
+  epic-7-retrospective: optional
+
+  # Epic 8: Quick Phrase Organization
+  # Users can find and reuse common phrases quickly
+  epic-8: backlog
+  8-1-categorize-quick-phrases-by-theme: backlog
+  8-2-add-recent-phrases-history: backlog
+  epic-8-retrospective: optional
+
+  # Epic 9: Emergency Panel
+  # Users can quickly communicate urgent needs
+  epic-9: backlog
+  9-1-add-emergency-panel-trigger: backlog
+  9-2-create-emergency-panel-with-critical-messages: backlog
+  9-3-allow-emergency-message-customization: backlog
+  epic-9-retrospective: optional
+
+  # Epic 10: Fatigue Mode
+  # Users experiencing high fatigue can still communicate essential messages
+  epic-10: backlog
+  10-1-add-fatigue-mode-trigger: backlog
+  10-2-create-minimal-fatigue-mode-interface: backlog
+  10-3-allow-fatigue-mode-button-customization: backlog
+  epic-10-retrospective: optional
+
+  # Epic 11: Smart Assistance
+  # Users benefit from intelligent contextual help and alternative input methods
+  epic-11: backlog
+  11-1-implement-time-based-predictive-phrases: backlog
+  11-2-allow-time-based-phrase-customization: backlog
+  11-3-create-scanning-mode-for-severely-reduced-mobility: backlog
+  11-4-configure-scanning-mode-settings: backlog
+  epic-11-retrospective: optional

@@ -35,8 +35,9 @@ struct KeywordChipsView: View {
                     .padding(.horizontal)
 
                 // Keyword chips - horizontal scroll
+                // Story 5.1: Increased spacing from 8pt to 12pt for better touch target separation
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: 12) {
                         ForEach(suggestionService.keywords, id: \.self) { keyword in
                             KeywordChip(
                                 keyword: keyword,
@@ -56,8 +57,8 @@ struct KeywordChipsView: View {
 
     /// Speaks the keyword immediately via TTS with haptic feedback.
     private func speakKeyword(_ keyword: String) {
-        // Haptic feedback
-        let impact = UIImpactFeedbackGenerator(style: .light)
+        // Story 5.1 AC4: Enhanced haptic feedback for accessibility (medium instead of light)
+        let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
 
         // Speak the keyword
@@ -71,8 +72,6 @@ struct KeywordChipsView: View {
 
         // F1 Fix: Unfreeze suggestions after speaking (exit edit mode if active)
         suggestionService.unfreezeSuggestions()
-
-        print("KeywordChipsView: Spoke keyword '\(keyword)'")
     }
 }
 
@@ -85,22 +84,25 @@ struct KeywordChip: View {
     let keyword: String
     let onTap: () -> Void
 
-    @State private var isPressed = false
-
     var body: some View {
         Button(action: onTap) {
             Text(keyword)
-                .font(.subheadline)
+                // Story 5.1 AC3: Increased font from .subheadline to .body for readability
+                .font(.body)
                 .fontWeight(.medium)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
+                // Story 5.1 AC2: Increased horizontal padding from 14pt to 20pt
+                .padding(.horizontal, 20)
+                // Story 5.1 AC1: Increased vertical padding from 8pt to 16pt
+                .padding(.vertical, 16)
                 .background(Color.accentColor.opacity(0.15))
                 .foregroundColor(.accentColor)
-                .cornerRadius(20)
+                .cornerRadius(24)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 20)
+                    RoundedRectangle(cornerRadius: 24)
                         .stroke(Color.accentColor.opacity(0.3), lineWidth: 1)
                 )
+                // Story 5.1 AC1: Ensure minimum touch target height of 60pt
+                .frame(minHeight: 60)
         }
         .buttonStyle(KeywordChipButtonStyle())
         .accessibilityLabel(keyword)
