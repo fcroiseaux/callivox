@@ -82,15 +82,15 @@ development_status:
 
   # Epic 6: Simplified Navigation
   # Users can access all features with fewer, larger, and more accessible controls
-  epic-6: backlog
-  6-1-create-modal-menu-for-guidance-contexts: backlog
-  6-2-reorganize-sidebar-separating-actions-from-settings: backlog
+  epic-6: done
+  6-1-create-modal-menu-for-guidance-contexts: done
+  6-2-reorganize-sidebar-separating-actions-from-settings: done
   epic-6-retrospective: optional
 
   # Epic 7: Accessibility Settings
   # Users can customize the accessibility level to match their specific needs
-  epic-7: backlog
-  7-1-create-accessibility-settings-screen-with-enhanced-mode: backlog
+  epic-7: in-progress
+  7-1-create-accessibility-settings-screen-with-enhanced-mode: done
   7-2-implement-enlarged-touch-targets-in-enhanced-mode: backlog
   7-3-implement-high-contrast-and-reduced-animations: backlog
   7-4-add-confirmation-dialogs-for-destructive-actions: backlog

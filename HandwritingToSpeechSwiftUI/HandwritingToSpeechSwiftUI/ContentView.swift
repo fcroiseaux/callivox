@@ -82,6 +82,9 @@ struct ContentView: View {
     // Interlocutor listening service for STT transcription
     @ObservedObject private var listeningService = InterlocutorListeningService.shared
     @EnvironmentObject var userModel: UserModel
+    // Story 7.1 Task 5.1: AccessibilitySettings for app-wide enhanced mode reactivity
+    // Used in Stories 7.2, 7.3 to apply enhanced accessibility when toggle changes
+    @EnvironmentObject var accessibilitySettings: AccessibilitySettings
 
     @State private var recognizedText: String = ""
     @State private var autoRead: Bool = false

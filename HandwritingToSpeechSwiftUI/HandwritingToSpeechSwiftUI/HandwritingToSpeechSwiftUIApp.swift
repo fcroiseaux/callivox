@@ -11,6 +11,8 @@ import CoreLocation
 @main
 struct HandwritingToSpeechSwiftUIApp: App {
     @StateObject private var userModel = UserModel()
+    // Story 7.1 Task 4.5: AccessibilitySettings instance for environment injection
+    @StateObject private var accessibilitySettings = AccessibilitySettings()
     
     init() {
         // Print app configuration status for debugging
@@ -38,6 +40,8 @@ struct HandwritingToSpeechSwiftUIApp: App {
             if userModel.isAuthenticated {
                 ContentView()
                     .environmentObject(userModel)
+                    // Story 7.1 Task 4.4: Inject AccessibilitySettings for app-wide access
+                    .environmentObject(accessibilitySettings)
                     .onAppear {
                         // Only check location status, don't request permission automatically
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {

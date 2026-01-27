@@ -1,12 +1,14 @@
 import SwiftUI
+import UIKit
 
-// Enhanced speak button component
+// MARK: - Story 6.2: Primary Speak Button (AC1 - 200x80pt minimum)
+// Enhanced speak button component - PRIMARY ACTION in reorganized sidebar
 @MainActor
 struct SpeakControlButton: View {
     var text: String
     var isLoading: Bool
     var onSpeak: () -> Void
-    
+
     // Create separate components for the button
     private var buttonBackground: some View {
         LinearGradient(
@@ -15,19 +17,24 @@ struct SpeakControlButton: View {
             endPoint: .bottom
         )
     }
-    
+
     private var buttonBorder: some View {
         RoundedRectangle(cornerRadius: 16)
             .stroke(Color.white.opacity(0.3), lineWidth: 2)
     }
-    
+
     var body: some View {
-        Button(action: onSpeak) {
+        Button(action: {
+            // Story 6.2 AC4: Haptic feedback for primary action (.medium)
+            let impact = UIImpactFeedbackGenerator(style: .medium)
+            impact.impactOccurred()
+            onSpeak()
+        }) {
             VStack(spacing: 8) {
                 Image(systemName: "speaker.wave.3.fill")
                     .font(.system(size: 36))
                     .symbolEffect(.pulse, options: .repeating, value: isLoading)
-                
+
                 HStack {
                     if isLoading {
                         ProgressView().tint(.white)
@@ -41,7 +48,8 @@ struct SpeakControlButton: View {
             }
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 18)
+            .frame(minWidth: 200, minHeight: 80)  // Story 6.2 AC1: 200x80pt minimum
+            .padding(.vertical, 12)
             .background(buttonBackground)
             .overlay(buttonBorder)
             .cornerRadius(16)
@@ -53,55 +61,42 @@ struct SpeakControlButton: View {
             normalColor: .clear
         ))
         .disabled(isLoading || text.isEmpty)
+        .opacity((isLoading || text.isEmpty) ? 0.6 : 1.0)
+        // Story 6.2 AC5: French accessibility labels
         .accessibilityLabel("Lire à haute voix")
         .accessibilityHint("Lit le texte reconnu à haute voix")
+        .accessibilityAddTraits(.isButton)
     }
 }
 
-// Enhanced repeat button
+// MARK: - Story 6.2: Compact Repeat Button (AC1 - 95x60pt for side-by-side)
+// Secondary action button - simplified for horizontal layout
 @MainActor
-struct RepeatControlButton: View {
+struct CompactRepeatButton: View {
     var lastText: String
     var isLoading: Bool
     var onRepeat: () -> Void
-    
-    // Text preview with truncation
-    private var textPreview: String {
-        guard !lastText.isEmpty else { return "" }
-        
-        return lastText.count > 20 ? 
-            "\"\(lastText.prefix(20))...\"" : 
-            "\"\(lastText)\""
-    }
-    
+
     var body: some View {
-        Button(action: onRepeat) {
-            VStack(spacing: 4) {
-                HStack {
-                    Image(systemName: "arrow.clockwise")
-                        .font(.system(size: 18))
-                    Text("Répéter")
-                        .font(.title2)
-                        .bold()
-                    if isLoading {
-                        ProgressView().tint(.white)
-                    }
-                }
-                
-                // Show preview of the text to repeat
-                if !lastText.isEmpty {
-                    Text(textPreview)
-                        .font(.caption)
-                        .lineLimit(1)
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 2)
-                        .background(Color.white.opacity(0.2))
-                        .cornerRadius(4)
+        Button(action: {
+            // Story 6.2 AC4: Haptic feedback for action (.medium)
+            let impact = UIImpactFeedbackGenerator(style: .medium)
+            impact.impactOccurred()
+            onRepeat()
+        }) {
+            HStack(spacing: 4) {
+                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 18))
+                Text("Répéter")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                if isLoading {
+                    ProgressView().tint(.white).scaleEffect(0.8)
                 }
             }
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .padding()
+            .frame(minWidth: 95, minHeight: 60)  // Story 6.2 AC1: 95x60pt minimum
             .background(
                 LinearGradient(
                     gradient: Gradient(colors: [Color.green, Color.green.opacity(0.8)]),
@@ -109,16 +104,58 @@ struct RepeatControlButton: View {
                     endPoint: .bottom
                 )
             )
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
-            )
             .cornerRadius(10)
         }
         .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
         .disabled(isLoading || lastText.isEmpty)
-        .accessibilityLabel("Répéter le dernier texte")
-        .accessibilityHint("Lit à nouveau le dernier texte prononcé: \(lastText)")
+        .opacity((isLoading || lastText.isEmpty) ? 0.5 : 1.0)
+        // Story 6.2 AC5: French accessibility labels
+        .accessibilityLabel("Répéter")
+        .accessibilityHint(lastText.isEmpty ? "Aucun texte à répéter" : "Répète le dernier texte prononcé")
+    }
+}
+
+// MARK: - Story 6.2: Compact Clear Button (AC1 - 95x60pt for side-by-side)
+// Secondary action button - simplified for horizontal layout
+@MainActor
+struct CompactClearButton: View {
+    @Binding var recognizedText: String
+    @Binding var speakTask: Task<Void, Never>?
+    var isLoading: Bool
+
+    var body: some View {
+        Button(action: {
+            // Story 6.2 AC4: Haptic feedback for action (.medium)
+            let impact = UIImpactFeedbackGenerator(style: .medium)
+            impact.impactOccurred()
+            recognizedText = ""
+            speakTask?.cancel()
+        }) {
+            HStack(spacing: 4) {
+                Image(systemName: "xmark.circle")
+                    .font(.system(size: 18))
+                Text("Effacer")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+            }
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .frame(minWidth: 95, minHeight: 60)  // Story 6.2 AC1: 95x60pt minimum
+            .background(
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.red, Color.red.opacity(0.8)]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            .cornerRadius(10)
+        }
+        .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
+        .disabled(isLoading || recognizedText.isEmpty)
+        .opacity((isLoading || recognizedText.isEmpty) ? 0.5 : 1.0)
+        // Story 6.2 AC5: French accessibility labels
+        .accessibilityLabel("Effacer")
+        .accessibilityHint(recognizedText.isEmpty ? "Aucun texte à effacer" : "Efface le texte saisi")
     }
 }
 
@@ -127,7 +164,7 @@ struct ScaleButtonStyle: ButtonStyle {
     var scaleAmount: CGFloat
     var pressedColor: Color
     var normalColor: Color
-    
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .background(configuration.isPressed ? pressedColor : normalColor)
@@ -136,21 +173,34 @@ struct ScaleButtonStyle: ButtonStyle {
     }
 }
 
+// MARK: - Story 6.2: Reorganized ControlButtonsView (AC1, AC3)
+// Main sidebar view - reduced from 8+ buttons to 5 buttons + settings submenu
 @MainActor
 struct ControlButtonsView: View {
     @EnvironmentObject var speechService: SpeechService
     @EnvironmentObject var userModel: UserModel
+    // M2 Fix (Code Review): Explicit declaration for sheet environment propagation
+    @EnvironmentObject var accessibilitySettings: AccessibilitySettings
     @Binding var recognizedText: String
     @Binding var showPhraseManager: Bool
     @Binding var speakTask: Task<Void, Never>?
+
+    // Story 6.2 AC2: State for settings submenu
+    @State private var showSettingsSubmenu: Bool = false
+
+    // Existing states for settings views (preserved for Task 3)
     @State private var showUsageSettings: Bool = false
     @State private var showLLMSettings: Bool = false
     @State private var showPersonalizationSettings: Bool = false
     @State private var showGradiumSettings: Bool = false
-    
+
+    // Story 7.1 Task 4.1: State for accessibility settings sheet
+    @State private var showAccessibilitySettings: Bool = false
+
     var body: some View {
-        VStack(spacing: 20) {
-            // Enhanced speak button at the top
+        // Story 6.2 AC1, AC3: Reorganized VStack with clear hierarchy
+        VStack(spacing: 16) {
+            // MARK: Story 6.2 AC1: PRIMARY ACTION - PARLER (200x80pt minimum)
             SpeakControlButton(
                 text: recognizedText,
                 isLoading: speechService.isLoading,
@@ -160,57 +210,42 @@ struct ControlButtonsView: View {
                     recognizedText = ""
                 }
             )
-            
-            // Enhanced repeat button
-            RepeatControlButton(
-                lastText: speechService.lastSpokenText,
-                isLoading: speechService.isLoading,
-                onRepeat: {
-                    guard !speechService.lastSpokenText.isEmpty else { return }
-                    speechService.speakText(speechService.lastSpokenText)
-                }
-            )
-            
-            // Clear text button
-            Button(action: {
-                recognizedText = ""
-                speakTask?.cancel()
-            }) {
-                HStack {
-                    Image(systemName: "xmark.circle")
-                        .font(.system(size: 18))
-                    Text("Effacer le texte")
-                        .font(.title2)
-                }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(
-                    LinearGradient(
-                        gradient: Gradient(colors: [Color.red, Color.red.opacity(0.8)]),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
+
+            // MARK: Story 6.2 AC1: SECONDARY ACTIONS - Side by side (95x60pt each)
+            HStack(spacing: 12) {
+                CompactRepeatButton(
+                    lastText: speechService.lastSpokenText,
+                    isLoading: speechService.isLoading,
+                    onRepeat: {
+                        guard !speechService.lastSpokenText.isEmpty else { return }
+                        speechService.speakText(speechService.lastSpokenText)
+                    }
                 )
-                .cornerRadius(10)
+
+                CompactClearButton(
+                    recognizedText: $recognizedText,
+                    speakTask: $speakTask,
+                    isLoading: speechService.isLoading
+                )
             }
-            .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
-            .disabled(speechService.isLoading || recognizedText.isEmpty)
-            
-            // Handwriting button removed as it's not useful for this app
-            
-            // Bouton pour ouvrir la gestion des phrases prédéfinies
+
+            // MARK: Story 6.2 AC1: TERTIARY - Mes phrases (50pt minimum)
             Button(action: {
+                // Story 6.2 AC4: Haptic feedback for navigation (.light)
+                let impact = UIImpactFeedbackGenerator(style: .light)
+                impact.impactOccurred()
                 showPhraseManager = true
             }) {
                 HStack {
-                    Text("Gérer les phrases")
-                        .font(.title2)
-                    Image(systemName: "list.bullet")
+                    Image(systemName: "text.quote")
+                        .font(.system(size: 18))
+                    Text("Mes phrases")
+                        .font(.title3)
+                        .fontWeight(.medium)
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .padding()
+                .frame(minHeight: 50)  // Story 6.2 AC1: 50pt minimum
                 .background(
                     LinearGradient(
                         gradient: Gradient(colors: [Color.purple, Color.purple.opacity(0.8)]),
@@ -221,24 +256,36 @@ struct ControlButtonsView: View {
                 .cornerRadius(10)
             }
             .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
-            .accessibilityLabel("Gérer les phrases prédéfinies")
+            // Story 6.2 AC5: French accessibility labels
+            .accessibilityLabel("Mes phrases")
             .accessibilityHint("Ouvre la gestion des phrases rapides")
 
-            // Bouton paramètres TTS Gradium
+            // MARK: Story 6.2 AC1: SETTINGS ENTRY POINT (50pt minimum)
+            // Replaces the 4+ settings buttons previously in sidebar (AC3)
             Button(action: {
-                showGradiumSettings = true
+                // Story 6.2 AC4: Haptic feedback for navigation (.light)
+                let impact = UIImpactFeedbackGenerator(style: .light)
+                impact.impactOccurred()
+                showSettingsSubmenu = true
             }) {
                 HStack {
-                    Text("Service TTS")
-                        .font(.title2)
-                    Image(systemName: "waveform")
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 18))
+                    Text("Paramètres")
+                        .font(.title3)
+                        .fontWeight(.medium)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.6))
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .padding()
+                .frame(minHeight: 50)  // Story 6.2 AC1: 50pt minimum
+                .padding(.horizontal, 16)
                 .background(
                     LinearGradient(
-                        gradient: Gradient(colors: [Color.mint, Color.mint.opacity(0.8)]),
+                        gradient: Gradient(colors: [Color.gray, Color.gray.opacity(0.8)]),
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -246,136 +293,26 @@ struct ControlButtonsView: View {
                 .cornerRadius(10)
             }
             .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
-            .accessibilityLabel("Paramètres du service TTS")
-            .accessibilityHint("Configurer la clé API Gradium pour la synthèse vocale")
+            // Story 6.2 AC5: French accessibility labels
+            .accessibilityLabel("Paramètres")
+            .accessibilityHint("Ouvre le menu des réglages")
 
-            // Bouton paramètres IA (Story 3.1 AC4)
-            Button(action: {
-                showLLMSettings = true
-            }) {
-                HStack {
-                    Text("Service IA")
-                        .font(.title2)
-                    Image(systemName: "brain")
-                }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(
-                    LinearGradient(
-                        gradient: Gradient(colors: [Color.indigo, Color.indigo.opacity(0.8)]),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .cornerRadius(10)
-            }
-            .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
-            .accessibilityLabel("Paramètres du service IA")
-            .accessibilityHint("Configurer la clé API pour les suggestions intelligentes")
-
-            // Bouton personnalisation IA (Story 4.1)
-            Button(action: {
-                showPersonalizationSettings = true
-            }) {
-                HStack {
-                    Text("Personnalisation IA")
-                        .font(.title2)
-                    Image(systemName: "person.text.rectangle")
-                }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(
-                    LinearGradient(
-                        gradient: Gradient(colors: [Color.cyan, Color.cyan.opacity(0.8)]),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .cornerRadius(10)
-            }
-            .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
-            .accessibilityLabel("Personnalisation de l'IA")
-            .accessibilityHint("Personnaliser le ton et le style des suggestions")
-
-            // Bouton paramètres de confidentialité - hidden when auth is skipped
-            if !AppConfig.Features.skipAuthentication {
-                Button(action: {
-                    showUsageSettings = true
-                }) {
-                    HStack {
-                        Text("Confidentialité")
-                            .font(.title2)
-                        Image(systemName: "lock.shield")
-                    }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(
-                        LinearGradient(
-                            gradient: Gradient(colors: [Color.teal, Color.teal.opacity(0.8)]),
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .cornerRadius(10)
-                }
-                .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
-                .overlay(alignment: .topTrailing) {
-                    if UsageLogManager.shared.pendingLogsCount > 0 {
-                        Text("\(UsageLogManager.shared.pendingLogsCount)")
-                            .font(.caption)
-                            .padding(5)
-                            .background(Color.red)
-                            .clipShape(Circle())
-                            .foregroundColor(.white)
-                            .offset(x: 5, y: -5)
-                    }
-                }
-            }
-            
-            // Bouton de déconnexion - hidden when auth is skipped
-            if !AppConfig.Features.skipAuthentication {
-                Button(action: {
-                    userModel.signOut()
-                }) {
-                    HStack {
-                        Text("Déconnexion")
-                            .font(.title2)
-                        Image(systemName: "rectangle.portrait.and.arrow.right")
-                    }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(
-                        LinearGradient(
-                            gradient: Gradient(colors: [Color.orange, Color.orange.opacity(0.8)]),
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .cornerRadius(10)
-                }
-                .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
-            }
-            
-            // Espace flexible pour pousser les informations utilisateur vers le bas
+            // Story 6.2 AC1: Flexible space to push user info to bottom
             Spacer()
-            
-            // Informations utilisateur en bas de la colonne de gauche
+
+            // MARK: Story 6.2 AC1: USER INFO - preserved at bottom
             if let userName = userModel.userName {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(userName)
                         .font(.footnote)
                         .fontWeight(.medium)
-                    
+
                     if let userEmail = userModel.userEmail {
                         Text(userEmail)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
-                    
+
                     Text("ID: \(userModel.userId ?? "Non disponible")")
                         .font(.caption2)
                         .foregroundColor(.gray)
@@ -388,6 +325,17 @@ struct ControlButtonsView: View {
         }
         .padding()
         .frame(minWidth: 200, idealWidth: 250, maxWidth: 300, alignment: .leading)
+        // MARK: Story 6.2 AC2: Settings submenu presentation (fullScreenCover per Story 6.1 pattern)
+        .fullScreenCover(isPresented: $showSettingsSubmenu) {
+            SettingsSubmenuView(
+                onSelectSetting: { setting in
+                    handleSettingSelection(setting)
+                },
+                onDismiss: { showSettingsSubmenu = false },
+                showPrivacyOption: !AppConfig.Features.skipAuthentication
+            )
+        }
+        // Existing .sheet modifiers for individual settings views
         .sheet(isPresented: $showUsageSettings) {
             UsageSettingsView()
         }
@@ -406,5 +354,33 @@ struct ControlButtonsView: View {
                 GradiumSettingsView()
             }
         }
+        // Story 7.1 Task 4.3: Accessibility settings sheet presentation
+        // M2 Fix (Code Review): Explicit environmentObject injection for clarity
+        .sheet(isPresented: $showAccessibilitySettings) {
+            AccessibilitySettingsView(onDismiss: { showAccessibilitySettings = false })
+                .environmentObject(accessibilitySettings)
+        }
+    }
+
+    // MARK: Story 6.2 Task 3.3: Handle settings view presentations from submenu
+    private func handleSettingSelection(_ setting: SettingsSubmenuView.SettingType) {
+        switch setting {
+        case .tts:
+            showGradiumSettings = true
+        case .llm:
+            showLLMSettings = true
+        case .personalization:
+            showPersonalizationSettings = true
+        case .accessibility:
+            // Story 7.1 Task 4.2: Handle accessibility settings
+            showAccessibilitySettings = true
+        case .privacy:
+            showUsageSettings = true
+        }
     }
 }
+
+// MARK: - Legacy Components
+// M1 Fix (Code Review): Removed legacy RepeatControlButton struct (65 lines of dead code)
+// Original Story 4.2 implementation was replaced by CompactRepeatButton in Story 6.2.
+// See git history for original implementation if needed.
