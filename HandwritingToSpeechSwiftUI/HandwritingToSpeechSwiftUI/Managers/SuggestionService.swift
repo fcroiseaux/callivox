@@ -231,6 +231,35 @@ class SuggestionService: ObservableObject {
         lastPrompt = ""
     }
 
+    // MARK: - Interlocutor Transcription Methods
+
+    /// Generates suggestions based on interlocutor's transcribed speech.
+    /// Adds transcription to conversation history (as what the interlocutor said)
+    /// and generates appropriate response suggestions for the user.
+    ///
+    /// - Parameter transcription: The transcribed speech from interlocutor
+    func generateSuggestionsFromTranscription(_ transcription: String) async {
+        let trimmedTranscription = transcription.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedTranscription.isEmpty else {
+            print("SuggestionService: Empty transcription received, skipping")
+            return
+        }
+
+        print("SuggestionService: Generating suggestions from transcription: \(trimmedTranscription.prefix(50))...")
+
+        // Clear any previous guidance state for fresh suggestions
+        clearGuidance()
+
+        // Add transcription to history (the interlocutor's message)
+        addToHistory(userMessage: trimmedTranscription)
+
+        // Store as last prompt for potential "different" requests
+        lastPrompt = trimmedTranscription
+
+        // Generate suggestions for responding to what the interlocutor said
+        await generateSuggestions(for: trimmedTranscription)
+    }
+
     // MARK: - Private Methods
 
     /// AC4: Handle errors with French messages and recovery suggestions.

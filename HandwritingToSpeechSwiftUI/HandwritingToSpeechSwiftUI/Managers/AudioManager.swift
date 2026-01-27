@@ -54,7 +54,12 @@ class AudioManager: NSObject, ObservableObject, AVAudioPlayerDelegate, AVSpeechS
     private func setupAudioAsync() async throws {
         return try await withCheckedThrowingContinuation { continuation in
             do {
-                try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.duckOthers, .allowBluetoothA2DP])
+                // Use playAndRecord to support both TTS playback and STT microphone capture
+                try AVAudioSession.sharedInstance().setCategory(
+                    .playAndRecord,
+                    mode: .default,
+                    options: [.duckOthers, .allowBluetoothA2DP, .defaultToSpeaker]
+                )
                 try AVAudioSession.sharedInstance().setActive(true)
                 continuation.resume()
             } catch {

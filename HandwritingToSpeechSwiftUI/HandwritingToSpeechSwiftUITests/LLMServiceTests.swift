@@ -339,6 +339,31 @@ final class LLMServiceTests: XCTestCase {
         XCTAssertEqual(AppConfig.LLM.suggestionCount, 4)
     }
 
+    // MARK: - Suggestion Diversity Tests
+
+    func testSystemPromptIncludesDiversityInstruction() {
+        // Verify the system prompt instructs the LLM to provide both positive and negative alternatives
+        let prompt = buildSystemPrompt()
+
+        // Should include instruction for varied alternatives
+        XCTAssertTrue(
+            prompt.contains("alternatives variées") || prompt.contains("positives ET négatives"),
+            "System prompt should include diversity instruction for question responses"
+        )
+
+        // Should include example for "Comment ça va?"
+        XCTAssertTrue(
+            prompt.contains("Comment ça va") || prompt.contains("ça va"),
+            "System prompt should include example for common questions"
+        )
+
+        // Should mention both positive and negative response types
+        XCTAssertTrue(
+            prompt.contains("positives") && prompt.contains("négatives"),
+            "System prompt should mention both positive and negative responses"
+        )
+    }
+
     // MARK: - Helper Methods (mirror OpenAICompatibleLLMProvider logic for testing)
 
     /// Parses response using the same logic as OpenAICompatibleLLMProvider
@@ -397,7 +422,12 @@ final class LLMServiceTests: XCTestCase {
         Tu es un assistant d'aide à la communication pour une personne qui ne peut pas parler. \
         Tu génères des suggestions de réponses courtes et naturelles en français. \
         Génère exactement \(AppConfig.LLM.suggestionCount) suggestions différentes, \
-        une par ligne, numérotées de 1 à \(AppConfig.LLM.suggestionCount).
+        une par ligne, numérotées de 1 à \(AppConfig.LLM.suggestionCount). \
+        IMPORTANT: Quand l'interlocuteur pose une question, propose des alternatives variées: \
+        pour une question fermée (oui/non, ça va?), inclus des réponses positives ET négatives; \
+        pour une question ouverte, propose des réponses reflétant différents états ou opinions. \
+        Par exemple, pour "Comment ça va?", propose à la fois des réponses positives ("Très bien, merci!") \
+        et des réponses plus nuancées ou négatives ("Pas terrible aujourd'hui", "Ça pourrait aller mieux").
         """
     }
 

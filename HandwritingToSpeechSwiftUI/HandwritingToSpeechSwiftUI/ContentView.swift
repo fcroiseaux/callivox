@@ -79,6 +79,8 @@ struct ContentView: View {
     @StateObject private var presetManager = PresetSentenceManager.shared
     // M2 Fix: Use @ObservedObject for shared singleton (consistent with other service patterns)
     @ObservedObject private var suggestionService = SuggestionService.shared
+    // Interlocutor listening service for STT transcription
+    @ObservedObject private var listeningService = InterlocutorListeningService.shared
     @EnvironmentObject var userModel: UserModel
 
     @State private var recognizedText: String = ""
@@ -86,8 +88,9 @@ struct ContentView: View {
     @State private var speakTask: Task<Void, Never>?
     @State private var showPhraseManager: Bool = false
     @State private var showUsageSettings: Bool = false
-    
+
     var body: some View {
+        ZStack {
         VStack(spacing: 0) {
             // Offline indicator at top of screen (Story 2.1: AC2, AC3)
             // M1 Fix: Removed redundant animation modifier - animation is handled in OfflineIndicatorView
@@ -154,6 +157,9 @@ struct ContentView: View {
                         Spacer()
                         SpeechToggleView(autoRead: $autoRead)
                         Spacer()
+                        // Listening toggle for interlocutor transcription
+                        ListeningToggleButton(listeningService: listeningService)
+                        Spacer()
                     }
                     .padding(10)
                     .background(Color(.systemGray6))
@@ -178,6 +184,10 @@ struct ContentView: View {
                 .frame(maxHeight: .infinity, alignment: .top)
             }
         } // End outer VStack (Story 2.1)
+
+            // Transcription overlay for interlocutor listening
+            TranscriptionOverlayView(listeningService: listeningService)
+        } // End ZStack
         // Fenêtre modale de gestion des phrases prédéfinies
         .sheet(isPresented: $showPhraseManager) {
             PhrasesListView()
@@ -203,8 +213,24 @@ struct ContentView: View {
         } message: {
             Text(suggestionService.errorMessage)
         }
+        // Error alert for listening service (STT)
+        .alert("Erreur Écoute", isPresented: Binding(
+            get: { listeningService.showError },
+            set: { _ in listeningService.dismissError() }
+        )) {
+            Button("OK") { listeningService.dismissError() }
+        } message: {
+            Text(listeningService.errorMessage)
+        }
         .onChange(of: recognizedText) { oldValue, newValue in
             handleTextChange(oldValue: oldValue, newValue: newValue)
+        }
+        // Disable listening during TTS playback to avoid feedback loop
+        .onChange(of: speechService.isLoading) { oldValue, newValue in
+            if newValue {
+                // TTS started, stop listening
+                listeningService.stopListening()
+            }
         }
         .environmentObject(speechService)
         .environmentObject(presetManager)

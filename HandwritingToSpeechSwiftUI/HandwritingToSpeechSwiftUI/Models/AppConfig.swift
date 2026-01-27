@@ -84,6 +84,33 @@ struct AppConfig {
         static let previewTextTemplate = "Bonjour, je suis la voix %@"
     }
 
+    // Gradium STT Configuration (Interlocutor Transcription)
+    struct STT {
+        /// Gradium STT WebSocket endpoint (EU region)
+        static let apiEndpoint = "wss://eu.api.gradium.ai/api/speech/asr"
+
+        /// Model name for STT
+        static let modelName = "default"
+
+        /// Input format (PCM Int16)
+        static let inputFormat = "pcm"
+
+        /// Sample rate in Hz (Gradium STT requirement)
+        static let sampleRate: Double = 24000
+
+        /// Chunk size in samples (80ms at 24kHz)
+        static let chunkSamples = 1920
+
+        /// VAD inactivity threshold for end-of-speech detection (0.0-1.0)
+        static let vadInactivityThreshold: Float = 0.8
+
+        /// Sustained silence duration before triggering LLM (seconds)
+        static let silenceDuration: TimeInterval = 0.5
+
+        /// Reuse Gradium API key from Keychain
+        static let keychainKey = "gradium_api_key"
+    }
+
     // LLM Service Configuration (Story 3.1)
     struct LLM {
         /// Cerebras API endpoint (OpenAI-compatible)
