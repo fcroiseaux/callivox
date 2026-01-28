@@ -13,6 +13,8 @@ struct HandwritingToSpeechSwiftUIApp: App {
     @StateObject private var userModel = UserModel()
     // Story 7.1 Task 4.5: AccessibilitySettings instance for environment injection
     @StateObject private var accessibilitySettings = AccessibilitySettings()
+    // Story 11.1 Task 5.1: TimeBasedPhraseSettings instance for environment injection
+    @StateObject private var timeBasedPhraseSettings = TimeBasedPhraseSettings.shared
     
     init() {
         // Print app configuration status for debugging
@@ -42,6 +44,8 @@ struct HandwritingToSpeechSwiftUIApp: App {
                     .environmentObject(userModel)
                     // Story 7.1 Task 4.4: Inject AccessibilitySettings for app-wide access
                     .environmentObject(accessibilitySettings)
+                    // Story 11.1 Task 5.2: Inject TimeBasedPhraseSettings for time-based suggestions
+                    .environmentObject(timeBasedPhraseSettings)
                     .onAppear {
                         // Only check location status, don't request permission automatically
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
