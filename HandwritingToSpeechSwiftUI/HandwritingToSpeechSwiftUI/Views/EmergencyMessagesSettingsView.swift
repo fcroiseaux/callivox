@@ -187,7 +187,7 @@ struct EmergencyMessageEditorView: View {
                     TextField("Ex: À L'AIDE", text: $displayText)
                         .textFieldStyle(.roundedBorder)
                         .frame(minHeight: 44)
-                        .onChange(of: displayText) { _ in
+                        .onChange(of: displayText) {
                             // Task 3.6: Save immediately on change
                             saveChanges()
                         }
@@ -207,7 +207,7 @@ struct EmergencyMessageEditorView: View {
                     TextField("Ex: Aidez-moi s'il vous plaît !", text: $spokenText)
                         .textFieldStyle(.roundedBorder)
                         .frame(minHeight: 44)
-                        .onChange(of: spokenText) { _ in
+                        .onChange(of: spokenText) {
                             // Task 3.6: Save immediately on change
                             saveChanges()
                         }

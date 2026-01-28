@@ -3,6 +3,7 @@
 //  HandwritingToSpeechSwiftUI
 //
 //  Story 9.2: Create Emergency Panel with Critical Messages
+//  Story 11.3: Scanning mode integration (AC5)
 //  Full-screen emergency panel with large buttons for urgent communication
 //
 
@@ -42,8 +43,17 @@ struct EmergencyPanelView: View {
     // Story 9.3 Task 6.4: EmergencyMessageSettings for customizable messages
     @ObservedObject var messageSettings = EmergencyMessageSettings.shared
 
+    // Story 11.3 Task 8.1: Add scanning mode references (AC5)
+    @ObservedObject private var scanningSettings = ScanningModeSettings.shared
+    @ObservedObject private var scanningController = ScanningModeController.shared
+
     // Story 9.2 AC4: Callback for panel dismissal
     let onDismiss: () -> Void
+
+    /// Task 8.5: Total scannable items (4 message buttons + 1 close button)
+    private var totalScannableItems: Int {
+        emergencyMessages.count + 1  // +1 for close button
+    }
 
     // MARK: - Story 9.3 Task 6.1, 6.2, 6.3: Dynamic emergency messages from settings
     // AC3: Convert CustomEmergencyMessage to EmergencyMessage, keeping emojis/colors fixed
@@ -93,72 +103,94 @@ struct EmergencyPanelView: View {
                     dismissPanel()
                 }
 
-            VStack(spacing: 24) {
-                // MARK: AC1: Header "⚠️ URGENCE ⚠️" in large text
-                // M1 Fix: Added VoiceOver accessibility label for blind users
-                Text("⚠️ URGENCE ⚠️")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                    .padding(.top, 40)
-                    .accessibilityLabel("Panneau d'urgence")
-                    .accessibilityAddTraits(.isHeader)
+            // Story 11.3 Task 8.2: Wrap grid and close button in ScannableContainer (AC5)
+            ScannableContainer(
+                itemCount: totalScannableItems,
+                onSelect: { index in
+                    // Task 8.4, 8.5: Handle selection based on index
+                    if index < emergencyMessages.count {
+                        // Message button: speak the emergency message
+                        let message = emergencyMessages[index]
+                        speakEmergencyMessage(message)
+                    } else {
+                        // Close button: dismiss panel
+                        dismissPanel()
+                    }
+                }
+            ) { highlightedIndex in
+                VStack(spacing: 24) {
+                    // MARK: AC1: Header "⚠️ URGENCE ⚠️" in large text
+                    // M1 Fix: Added VoiceOver accessibility label for blind users
+                    Text("⚠️ URGENCE ⚠️")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(.top, 40)
+                        .accessibilityLabel("Panneau d'urgence")
+                        .accessibilityAddTraits(.isHeader)
 
-                Spacer()
+                    Spacer()
 
-                // MARK: AC2: 2x2 Grid of emergency buttons
-                // L2 Fix: Use conditional gridSpacing for enhanced accessibility
-                LazyVGrid(columns: [
-                    GridItem(.flexible(), spacing: gridSpacing),
-                    GridItem(.flexible(), spacing: gridSpacing)
-                ], spacing: gridSpacing) {
-                    ForEach(emergencyMessages) { message in
-                        EmergencyMessageButton(
-                            message: message,
-                            minWidth: buttonMinWidth,
-                            height: buttonHeight,
-                            isEnhancedMode: accessibilitySettings.isEnhancedModeEnabled,
-                            onTap: {
-                                speakEmergencyMessage(message)
-                            }
+                    // MARK: AC2: 2x2 Grid of emergency buttons
+                    // L2 Fix: Use conditional gridSpacing for enhanced accessibility
+                    LazyVGrid(columns: [
+                        GridItem(.flexible(), spacing: gridSpacing),
+                        GridItem(.flexible(), spacing: gridSpacing)
+                    ], spacing: gridSpacing) {
+                        ForEach(Array(emergencyMessages.enumerated()), id: \.element) { index, message in
+                            EmergencyMessageButton(
+                                message: message,
+                                minWidth: buttonMinWidth,
+                                height: buttonHeight,
+                                isEnhancedMode: accessibilitySettings.isEnhancedModeEnabled,
+                                onTap: {
+                                    // Task 8.6: Existing tap behavior preserved
+                                    speakEmergencyMessage(message)
+                                }
+                            )
+                            .environmentObject(accessibilitySettings)
+                            // Task 8.3: Apply scanning highlight
+                            .scanningHighlight(index: index, highlightedIndex: highlightedIndex)
+                        }
+                    }
+                    .padding(.horizontal, 20)
+
+                    Spacer()
+
+                    // MARK: AC2: Close button "✕ Fermer" at bottom (minimum 80pt, 100pt enhanced)
+                    Button(action: {
+                        // Task 8.6: Existing tap behavior preserved
+                        dismissPanel()
+                    }) {
+                        HStack(spacing: 8) {
+                            Text("✕")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            Text("Fermer")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                        }
+                        .foregroundColor(.white)
+                        .frame(minWidth: 200, minHeight: closeButtonHeight)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.gray.opacity(0.5))
                         )
-                        .environmentObject(accessibilitySettings)
                     }
+                    .buttonStyle(ScaleButtonStyle(
+                        scaleAmount: accessibilitySettings.scaleAnimationAmount,
+                        pressedColor: .clear,
+                        normalColor: .clear,
+                        animationDuration: accessibilitySettings.animationDuration
+                    ))
+                    // AC7: VoiceOver accessibility for close button
+                    .accessibilityLabel("Fermer")
+                    .accessibilityHint("Ferme le panneau d'urgence")
+                    .accessibilityAddTraits(.isButton)
+                    // Task 8.5: Close button is last in scanning sequence
+                    .scanningHighlight(index: emergencyMessages.count, highlightedIndex: highlightedIndex)
+                    .padding(.bottom, 40)
                 }
-                .padding(.horizontal, 20)
-
-                Spacer()
-
-                // MARK: AC2: Close button "✕ Fermer" at bottom (minimum 80pt, 100pt enhanced)
-                Button(action: {
-                    dismissPanel()
-                }) {
-                    HStack(spacing: 8) {
-                        Text("✕")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        Text("Fermer")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                    }
-                    .foregroundColor(.white)
-                    .frame(minWidth: 200, minHeight: closeButtonHeight)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.gray.opacity(0.5))
-                    )
-                }
-                .buttonStyle(ScaleButtonStyle(
-                    scaleAmount: accessibilitySettings.scaleAnimationAmount,
-                    pressedColor: .clear,
-                    normalColor: .clear,
-                    animationDuration: accessibilitySettings.animationDuration
-                ))
-                // AC7: VoiceOver accessibility for close button
-                .accessibilityLabel("Fermer")
-                .accessibilityHint("Ferme le panneau d'urgence")
-                .accessibilityAddTraits(.isButton)
-                .padding(.bottom, 40)
             }
         }
     }

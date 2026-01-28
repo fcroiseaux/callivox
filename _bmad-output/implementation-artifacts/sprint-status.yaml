@@ -121,9 +121,9 @@ development_status:
 
   # Epic 11: Smart Assistance
   # Users benefit from intelligent contextual help and alternative input methods
-  epic-11: in-progress
+  epic-11: done
   11-1-implement-time-based-predictive-phrases: done
-  11-2-allow-time-based-phrase-customization: backlog
-  11-3-create-scanning-mode-for-severely-reduced-mobility: backlog
-  11-4-configure-scanning-mode-settings: backlog
+  11-2-allow-time-based-phrase-customization: done
+  11-3-create-scanning-mode-for-severely-reduced-mobility: done
+  11-4-configure-scanning-mode-settings: done
   epic-11-retrospective: optional

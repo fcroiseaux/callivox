@@ -5,6 +5,9 @@
 //  Story 7.1: Accessibility Settings Screen (AC2, AC5, AC6)
 //  Story 10.1: Fatigue Mode settings section (AC2)
 //  Story 10.3: Replace placeholder with FatigueModeSettingsView
+//  Story 11.2: Time-based phrases settings section (AC1)
+//  Story 11.3: Scanning mode settings section (AC1)
+//  Story 11.4: Replace placeholder with ScanningModeSettingsView
 //  Sheet-style view for configuring Enhanced Accessibility mode
 //
 
@@ -15,6 +18,8 @@ import UIKit
 @MainActor
 struct AccessibilitySettingsView: View {
     @EnvironmentObject var accessibilitySettings: AccessibilitySettings
+    // Story 11.3 Task 5.2: ScanningModeSettings for toggle binding
+    @ObservedObject private var scanningSettings = ScanningModeSettings.shared
     let onDismiss: () -> Void
 
     var body: some View {
@@ -35,7 +40,8 @@ struct AccessibilitySettingsView: View {
                                 .foregroundColor(.secondary)
                         }
                     }
-                    .onChange(of: accessibilitySettings.isEnhancedModeEnabled) { _ in
+                    // M1 Fix: Updated to iOS 17+ onChange syntax
+                    .onChange(of: accessibilitySettings.isEnhancedModeEnabled) {
                         // Story 7.1 AC5: Haptic feedback on toggle (.medium)
                         let impact = UIImpactFeedbackGenerator(style: .medium)
                         impact.impactOccurred()
@@ -66,7 +72,8 @@ struct AccessibilitySettingsView: View {
                                 .foregroundColor(.secondary)
                         }
                     }
-                    .onChange(of: accessibilitySettings.requireConfirmationDialogs) { _ in
+                    // M1 Fix: Updated to iOS 17+ onChange syntax
+                    .onChange(of: accessibilitySettings.requireConfirmationDialogs) {
                         // Haptic feedback on toggle (.medium)
                         let impact = UIImpactFeedbackGenerator(style: .medium)
                         impact.impactOccurred()
@@ -98,7 +105,8 @@ struct AccessibilitySettingsView: View {
                         }
                     }
                     // Story 10.1 Task 3.6: Haptic feedback on toggle change
-                    .onChange(of: accessibilitySettings.isFatigueModeEnabled) { _ in
+                    // M1 Fix: Updated to iOS 17+ onChange syntax
+                    .onChange(of: accessibilitySettings.isFatigueModeEnabled) {
                         let impact = UIImpactFeedbackGenerator(style: .medium)
                         impact.impactOccurred()
                     }
@@ -173,6 +181,104 @@ struct AccessibilitySettingsView: View {
                     .accessibilityHint("Ouvre la configuration des messages du panneau d'urgence")
                 } header: {
                     Text("Urgence")
+                }
+
+                // Story 11.2 Task 4: Time-based phrases settings section (AC1)
+                // Task 4.1: New Section for "Suggestions contextuelles"
+                Section {
+                    // Task 4.2: NavigationLink to TimeBasedPhrasesSettingsView
+                    NavigationLink {
+                        TimeBasedPhrasesSettingsView()
+                            .environmentObject(accessibilitySettings)
+                    } label: {
+                        HStack(spacing: 12) {
+                            // Task 4.3: clock.badge.fill icon with blue color
+                            Image(systemName: "clock.badge.fill")
+                                .font(.title2)
+                                .foregroundColor(.blue)
+
+                            // Task 4.4: Label and description
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Phrases du moment")
+                                    .font(.title3)
+                                    .fontWeight(.medium)
+
+                                Text("Personnaliser les phrases suggérées selon l'heure")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        // Task 4.5: Minimum 60pt height
+                        .frame(minHeight: 60)
+                    }
+                    // Task 4.5: French VoiceOver accessibility labels
+                    .accessibilityLabel("Phrases du moment")
+                    .accessibilityHint("Ouvre la configuration des phrases suggérées selon l'heure de la journée")
+                } header: {
+                    // Task 4.1: Section header
+                    Text("Suggestions contextuelles")
+                } footer: {
+                    Text("Personnalisez les phrases suggérées automatiquement selon l'heure de la journée (matin, midi, soir, nuit).")
+                }
+
+                // Story 11.3 Task 5: Scanning Mode settings section (AC1)
+                // Task 5.1: New Section "Mode Scanning"
+                Section {
+                    // Task 5.2: Toggle for scanning mode
+                    Toggle(isOn: $scanningSettings.isEnabled) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Activer le mode scanning")
+                                .font(.title3)
+                                .fontWeight(.medium)
+
+                            // Task 5.3: Description text
+                            Text("Les boutons s'illuminent tour à tour. Tapez pour sélectionner.")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    // Haptic feedback on toggle change
+                    // M1 Fix: Updated to iOS 17+ zero-parameter onChange syntax for consistency
+                    .onChange(of: scanningSettings.isEnabled) {
+                        let impact = UIImpactFeedbackGenerator(style: .medium)
+                        impact.impactOccurred()
+                    }
+                    // Task 5.5: Minimum height
+                    .frame(minHeight: accessibilitySettings.buttonHeight)
+                    // Task 5.6: French VoiceOver accessibility labels
+                    .accessibilityLabel("Activer le mode scanning")
+                    .accessibilityHint("Les boutons s'illuminent tour à tour. Tapez n'importe où pour sélectionner.")
+                    .accessibilityValue(scanningSettings.isEnabled ? "Activé" : "Désactivé")
+
+                    // Story 11.4 Task 6: NavigationLink to ScanningModeSettingsView
+                    NavigationLink {
+                        ScanningModeSettingsView()
+                            .environmentObject(accessibilitySettings)
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "slider.horizontal.3")
+                                .font(.title2)
+                                .foregroundColor(.purple)
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Configurer le scanning")
+                                    .font(.title3)
+                                    .fontWeight(.medium)
+
+                                Text("Vitesse, direction, retour sonore")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .frame(minHeight: accessibilitySettings.buttonHeight)
+                    }
+                    .accessibilityLabel("Configurer le scanning")
+                    .accessibilityHint("Ouvre la configuration de la vitesse, direction et comportement du scanning")
+                } header: {
+                    // Task 5.1: Section header
+                    Text("Mode Scanning")
+                } footer: {
+                    Text("Le mode scanning permet aux utilisateurs à mobilité très réduite de sélectionner des options en tapant n'importe où lorsque l'élément souhaité est surligné.")
                 }
             }
             .listStyle(.insetGrouped)

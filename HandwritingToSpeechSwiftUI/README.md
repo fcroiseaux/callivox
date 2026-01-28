@@ -15,6 +15,11 @@ CalliVox transforme le texte saisi (clavier ou écriture manuscrite via Apple Pe
 - **Mode hors-ligne** : Détection automatique du réseau avec fallback vers la synthèse iOS native
 - **Phrases rapides** : Raccourcis pour les phrases fréquemment utilisées
 - **Répétition** : Bouton pour relire le dernier texte prononcé
+- **Phrases du moment** : Suggestions intelligentes adaptées à l'heure de la journée (matin, midi, soir, nuit)
+- **Mode scanning** : Navigation séquentielle pour les utilisateurs à mobilité très réduite (les boutons s'illuminent tour à tour)
+- **Panneau d'urgence** : Accès rapide à 4 messages d'urgence personnalisables
+- **Mode fatigue** : Interface simplifiée avec gros boutons pour les moments de fatigue intense
+- **Accessibilité renforcée** : Cibles tactiles agrandies (80pt), contraste élevé, animations réduites
 
 ## Prérequis
 
@@ -115,6 +120,50 @@ Cerebras fournit un modèle de langage rapide pour générer des suggestions de 
 2. Ajoutez vos phrases fréquemment utilisées
 3. Les phrases sélectionnées apparaissent en bas de l'écran pour un accès rapide
 
+### Accessibilité renforcée
+
+1. Appuyez sur **"Accessibilité"** dans la barre latérale
+2. Activez **"Accessibilité Renforcée"** pour :
+   - Des cibles tactiles agrandies (80pt)
+   - Un contraste élevé
+   - Des animations réduites
+3. Optionnel : Activez **"Demander confirmation"** pour les actions destructives
+
+### Phrases du moment
+
+1. Les phrases sont automatiquement adaptées à l'heure de la journée :
+   - **Matin (7h-9h)** : "Bonjour", "Bien dormi ?"
+   - **Midi (12h-14h)** : "Bon appétit", "J'ai faim"
+   - **Soir (18h-20h)** : "Bonne soirée", "À demain"
+   - **Nuit (21h-23h)** : "Bonne nuit", "Je suis fatigué"
+2. Personnalisez-les dans **Accessibilité > Phrases du moment**
+
+### Mode scanning (mobilité réduite)
+
+1. Activez dans **Accessibilité > Mode Scanning**
+2. Les boutons s'illuminent tour à tour automatiquement
+3. Tapez n'importe où sur l'écran lorsque le bouton souhaité est surligné
+4. Configurez :
+   - **Vitesse** : Lent (3s), Normal (2s), Rapide (1s)
+   - **Direction** : Aller simple ou Aller-retour
+   - **Retour sonore** : Son subtil à chaque changement
+
+### Panneau d'urgence
+
+1. Appuyez sur le bouton **d'urgence** (rouge) dans la barre latérale
+2. 4 messages d'urgence pré-configurés :
+   - "J'ai besoin d'aide"
+   - "Appelez les secours"
+   - "J'ai mal"
+   - "Quelque chose ne va pas"
+3. Personnalisez-les dans **Accessibilité > Messages d'urgence**
+
+### Mode fatigue
+
+1. Activez dans **Accessibilité > Mode Fatigue**
+2. Interface épurée avec 4 gros boutons essentiels
+3. Personnalisez les messages dans les réglages
+
 ## Mode développement
 
 ### Configuration actuelle (AppConfig.swift)
@@ -139,23 +188,32 @@ xcodebuild test -scheme HandwritingToSpeechSwiftUI \
 ```
 HandwritingToSpeechSwiftUI/
 ├── Models/
-│   ├── AppConfig.swift          # Configuration centralisée
+│   ├── AppConfig.swift              # Configuration centralisée
 │   ├── PersonalizationConfig.swift
 │   └── GuidanceContext.swift
 ├── Services/
-│   ├── GradiumTTSProvider.swift # Client API Gradium
+│   ├── GradiumTTSProvider.swift     # Client API Gradium
 │   └── OpenAICompatibleLLMProvider.swift
 ├── Managers/
-│   ├── SpeechService.swift      # Orchestration TTS
-│   ├── SuggestionService.swift  # Gestion des suggestions
-│   ├── KeychainManager.swift    # Stockage sécurisé
-│   └── NetworkMonitor.swift     # Détection réseau
+│   ├── SpeechService.swift          # Orchestration TTS
+│   ├── SuggestionService.swift      # Gestion des suggestions
+│   ├── KeychainManager.swift        # Stockage sécurisé
+│   ├── NetworkMonitor.swift         # Détection réseau
+│   ├── AccessibilitySettings.swift  # Mode accessibilité renforcée
+│   ├── TimeBasedPhraseSettings.swift # Phrases selon l'heure
+│   ├── ScanningModeSettings.swift   # Configuration scanning
+│   └── ScanningModeController.swift # Contrôleur scanning actif
 └── Views/
-    ├── ContentView.swift        # Vue principale
+    ├── ContentView.swift            # Vue principale
     ├── GradiumSettingsView.swift
     ├── LLMSettingsView.swift
     ├── PersonalizationSettingsView.swift
-    └── SuggestionView.swift
+    ├── SuggestionView.swift
+    ├── AccessibilitySettingsView.swift   # Réglages accessibilité
+    ├── TimeBasedPhrasesSettingsView.swift # Config phrases temporelles
+    ├── ScanningModeSettingsView.swift    # Config mode scanning
+    ├── EmergencyPanelView.swift          # Panneau d'urgence
+    └── FatigueModeView.swift             # Interface mode fatigue
 ```
 
 ## Stockage des données

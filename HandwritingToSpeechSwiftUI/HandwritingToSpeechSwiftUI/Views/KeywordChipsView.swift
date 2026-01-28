@@ -4,6 +4,7 @@
 //
 //  InvincibleVoice: Quick keyword chips for rapid responses.
 //  Story 5.4: Displays keywords in a grid layout for accessibility (no swiping required).
+//  Story 11.3: Scanning mode integration (AC2, AC3)
 //  Created by CalliVox on 2026-01-27.
 //
 
@@ -28,6 +29,9 @@ struct KeywordChipsView: View {
     @EnvironmentObject var accessibilitySettings: AccessibilitySettings
     // Story 8.2 Task 3.3: Add preset manager for recent history tracking
     @EnvironmentObject var presetManager: PresetSentenceManager
+    // Story 11.3 Task 6.1: Add scanning mode references (AC2, AC3)
+    @ObservedObject private var scanningSettings = ScanningModeSettings.shared
+    @ObservedObject private var scanningController = ScanningModeController.shared
 
     var body: some View {
         // Only show when keywords are available
@@ -42,19 +46,32 @@ struct KeywordChipsView: View {
                 // Story 5.4: Replaced horizontal scroll with grid layout for accessibility (AC1)
                 // Users with tremors can see all keywords without swiping gestures
                 // Note: 12pt spacing preserved from Story 5.1 touch target improvements
-                LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: 100), spacing: 12)],  // Story 5.4 AC1: Adaptive columns, min 100pt
-                    spacing: 12  // Story 5.4 AC3: 12pt spacing (originally Story 5.1)
-                ) {
-                    ForEach(suggestionService.keywords, id: \.self) { keyword in
-                        KeywordChip(
-                            keyword: keyword,
-                            chipHeight: accessibilitySettings.chipHeight,  // Story 7.2 AC1
-                            onTap: { speakKeyword(keyword) },
-                            // Story 7.3 AC2: Conditional animation values
-                            scaleAnimationAmount: accessibilitySettings.isEnhancedModeEnabled ? 0.98 : 0.92,
-                            animationDuration: accessibilitySettings.isEnhancedModeEnabled ? 0.05 : 0.1
-                        )
+                // Story 11.3 Task 6.1: Wrap grid in ScannableContainer for scanning mode (AC2, AC3)
+                ScannableContainer(
+                    itemCount: suggestionService.keywords.count,
+                    onSelect: { index in
+                        // Task 6.3: Handle selection - speak keyword at selected index
+                        let keyword = suggestionService.keywords[index]
+                        speakKeyword(keyword)
+                    }
+                ) { highlightedIndex in
+                    LazyVGrid(
+                        columns: [GridItem(.adaptive(minimum: 100), spacing: 12)],  // Story 5.4 AC1: Adaptive columns, min 100pt
+                        spacing: 12  // Story 5.4 AC3: 12pt spacing (originally Story 5.1)
+                    ) {
+                        ForEach(Array(suggestionService.keywords.enumerated()), id: \.element) { index, keyword in
+                            KeywordChip(
+                                keyword: keyword,
+                                chipHeight: accessibilitySettings.chipHeight,  // Story 7.2 AC1
+                                onTap: { speakKeyword(keyword) },  // Task 6.4: Existing tap behavior preserved
+                                // Story 7.3 AC2: Conditional animation values
+                                scaleAnimationAmount: accessibilitySettings.isEnhancedModeEnabled ? 0.98 : 0.92,
+                                animationDuration: accessibilitySettings.isEnhancedModeEnabled ? 0.05 : 0.1
+                            )
+                            // Task 6.2: Apply scanning highlight to each chip
+                            // L1 Fix: Use cornerRadius 24 to match KeywordChip's cornerRadius
+                            .scanningHighlight(index: index, highlightedIndex: highlightedIndex, cornerRadius: 24)
+                        }
                     }
                 }
                 .padding(.horizontal)

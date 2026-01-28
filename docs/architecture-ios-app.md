@@ -15,7 +15,7 @@ The CalliVox iOS app is a SwiftUI-based accessibility application providing text
 | UI Framework | SwiftUI | Declarative UI |
 | Language | Swift 5+ | Primary language |
 | TTS Engine | AVFoundation | Native speech synthesis |
-| TTS Engine | ElevenLabs API | AI voice synthesis |
+| TTS Engine | Gradium API | AI voice synthesis |
 | Authentication | AuthenticationServices | Apple Sign In |
 | Storage | Keychain | Secure credential storage |
 | Storage | UserDefaults | App settings persistence |
@@ -166,6 +166,79 @@ class PresetSentenceManager: ObservableObject {
 }
 ```
 
+#### AccessibilitySettings
+
+**Purpose:** Enhanced accessibility mode configuration
+
+```swift
+@MainActor
+class AccessibilitySettings: ObservableObject {
+    @Published var isEnhancedModeEnabled: Bool
+    @Published var isFatigueModeEnabled: Bool
+    @Published var requireConfirmationDialogs: Bool
+
+    var buttonHeight: CGFloat  // 60pt (standard) or 80pt (enhanced)
+}
+```
+
+#### TimeBasedPhraseSettings
+
+**Purpose:** Time-based predictive phrase management
+
+```swift
+@MainActor
+class TimeBasedPhraseSettings: ObservableObject {
+    static let shared: TimeBasedPhraseSettings
+
+    @Published var morningPhrases: [String]   // 7h-9h
+    @Published var lunchPhrases: [String]     // 12h-14h
+    @Published var eveningPhrases: [String]   // 18h-20h
+    @Published var nightPhrases: [String]     // 21h-23h
+
+    func phrasesForCurrentTime() -> [String]
+    func resetToDefaults()
+}
+```
+
+#### ScanningModeSettings
+
+**Purpose:** Scanning mode configuration for reduced mobility users
+
+```swift
+@MainActor
+class ScanningModeSettings: ObservableObject {
+    static let shared: ScanningModeSettings
+
+    @Published var isEnabled: Bool
+    @Published var scanSpeed: ScanSpeed       // slow (3s), normal (2s), fast (1s)
+    @Published var scanDirection: ScanDirection // forwardOnly, forwardAndBackward
+    @Published var autoRestart: Bool
+    @Published var soundFeedbackEnabled: Bool
+
+    func resetToDefaults()
+}
+```
+
+#### ScanningModeController
+
+**Purpose:** Runtime state machine for active scanning
+
+```swift
+@MainActor
+class ScanningModeController: ObservableObject {
+    static let shared: ScanningModeController
+
+    @Published var currentHighlightedIndex: Int?
+    @Published var isScanning: Bool
+    @Published var isPaused: Bool
+
+    func startScanning(itemCount: Int)
+    func stopScanning()
+    func selectCurrentItem() -> Int?
+    func resumeScanning()
+}
+```
+
 ### Views
 
 | View | Purpose |
@@ -178,6 +251,13 @@ class PresetSentenceManager: ObservableObject {
 | `SpeechShortcutsView` | Quick phrase buttons |
 | `SpeechToggleView` | Auto-read toggle |
 | `UsageSettingsView` | Usage settings panel |
+| `AccessibilitySettingsView` | Enhanced accessibility configuration |
+| `TimeBasedPhrasesSettingsView` | Time-based phrase customization |
+| `ScanningModeSettingsView` | Scanning mode configuration |
+| `EmergencyPanelView` | Emergency messages panel |
+| `FatigueModeView` | Simplified fatigue mode interface |
+| `FatigueModeSettingsView` | Fatigue mode button customization |
+| `EmergencyMessagesSettingsView` | Emergency message customization |
 
 ## Application Flow
 
@@ -294,10 +374,18 @@ ContentView()
 
 ### Accessibility Features
 
-- Large touch targets (50x50pt minimum)
-- High contrast colors
-- VoiceOver labels on all controls
+- **Enhanced Mode:** Large touch targets (80pt), high contrast, reduced animations
+- **Standard Mode:** Touch targets (60pt minimum)
+- VoiceOver labels on all controls (French)
 - Auto-read mode for hands-free operation
+- **Scanning Mode:** Sequential button highlighting for severely reduced mobility users
+  - Configurable speed (1s/2s/3s)
+  - Direction options (forward only, forward-backward)
+  - Audio and haptic feedback
+- **Fatigue Mode:** Simplified 4-button interface for high fatigue situations
+- **Emergency Panel:** Quick access to 4 customizable emergency messages
+- **Time-based Phrases:** Context-aware suggestions based on time of day
+- Confirmation dialogs for destructive actions (optional)
 
 ### Visual Design
 

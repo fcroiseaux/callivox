@@ -3,6 +3,7 @@
 //  HandwritingToSpeechSwiftUITests
 //
 //  Story 11.1: Implement Time-Based Predictive Phrases
+//  Story 11.2: Time-Based Phrase Customization
 //  Unit tests for TimeBasedPhraseSettings and TimePeriod
 //
 
@@ -17,11 +18,15 @@ final class TimeBasedPhraseSettingsTests: XCTestCase {
     override func setUp() async throws {
         // Clear UserDefaults before each test to ensure clean state
         UserDefaults.standard.removeObject(forKey: "com.callivox.time_based_phrases_enabled")
+        // Story 11.2: Clear custom phrases
+        UserDefaults.standard.removeObject(forKey: "com.callivox.time_based_custom_phrases")
     }
 
     override func tearDown() async throws {
         // Clean up UserDefaults after each test
         UserDefaults.standard.removeObject(forKey: "com.callivox.time_based_phrases_enabled")
+        // Story 11.2: Clear custom phrases
+        UserDefaults.standard.removeObject(forKey: "com.callivox.time_based_custom_phrases")
     }
 
     // MARK: - Story 11.1 Task 1.6: isEnabled Toggle Tests
@@ -333,5 +338,236 @@ final class TimeBasedPhraseSettingsTests: XCTestCase {
         let shared1 = TimeBasedPhraseSettings.shared
         let shared2 = TimeBasedPhraseSettings.shared
         XCTAssertTrue(shared1 === shared2, "Shared instances should be the same object")
+    }
+
+    // MARK: - Story 11.2 Task 5.1: Custom Phrases Persistence Tests
+
+    func testCustomPhrasesPersistToUserDefaults() {
+        // Task 5.1: Test customPhrases persistence to UserDefaults
+        let settings = TimeBasedPhraseSettings()
+        let customMorningPhrases = ["Bonjour!", "Réveil", "Médicaments du matin"]
+
+        settings.updatePhrases(for: .morning, phrases: customMorningPhrases)
+
+        // Verify data was persisted to UserDefaults
+        let persistedData = UserDefaults.standard.data(forKey: "com.callivox.time_based_custom_phrases")
+        XCTAssertNotNil(persistedData, "Custom phrases should be persisted to UserDefaults")
+
+        // Decode and verify the content
+        if let data = persistedData,
+           let decoded = try? JSONDecoder().decode([String: [String]].self, from: data) {
+            XCTAssertEqual(decoded["morning"], customMorningPhrases, "Persisted phrases should match")
+        } else {
+            XCTFail("Failed to decode persisted custom phrases")
+        }
+    }
+
+    func testCustomPhrasesLoadFromUserDefaults() {
+        // Set custom phrases directly in UserDefaults
+        let customPhrases = ["morning": ["Test1", "Test2", "Test3"]]
+        if let data = try? JSONEncoder().encode(customPhrases) {
+            UserDefaults.standard.set(data, forKey: "com.callivox.time_based_custom_phrases")
+        }
+
+        // Create new instance - should load persisted custom phrases
+        let settings = TimeBasedPhraseSettings()
+        let loadedPhrases = settings.phrases(for: .morning)
+
+        XCTAssertEqual(loadedPhrases, ["Test1", "Test2", "Test3"], "Custom phrases should be loaded from UserDefaults")
+    }
+
+    // MARK: - Story 11.2 Task 5.2: Add Phrase Limit Tests
+
+    func testAddPhraseRespectsMaximum6Limit() {
+        // Task 5.2: Test addPhrase respects 6-phrase limit
+        let settings = TimeBasedPhraseSettings()
+
+        // Start with default 4 phrases, add 2 more (should succeed)
+        XCTAssertTrue(settings.addPhrase(to: .morning, phrase: "Phrase 5"), "Adding 5th phrase should succeed")
+        XCTAssertTrue(settings.addPhrase(to: .morning, phrase: "Phrase 6"), "Adding 6th phrase should succeed")
+
+        // Try to add 7th phrase (should fail)
+        XCTAssertFalse(settings.addPhrase(to: .morning, phrase: "Phrase 7"), "Adding 7th phrase should fail")
+
+        // Verify count is 6
+        XCTAssertEqual(settings.phraseCount(for: .morning), 6, "Should have exactly 6 phrases")
+    }
+
+    func testAddPhraseToNonePeriodFails() {
+        let settings = TimeBasedPhraseSettings()
+        XCTAssertFalse(settings.addPhrase(to: .none, phrase: "Test"), "Adding phrase to .none period should fail")
+    }
+
+    // MARK: - Story 11.2 Task 5.3: Remove Phrase Minimum Tests
+
+    func testRemovePhraseMaintainsMinimum1() {
+        // Task 5.3: Test removePhrase maintains minimum 1 phrase
+        let settings = TimeBasedPhraseSettings()
+
+        // Set a period with only 1 phrase
+        settings.updatePhrases(for: .morning, phrases: ["Only Phrase"])
+
+        // Try to remove the only phrase (should fail)
+        XCTAssertFalse(settings.removePhrase(from: .morning, at: 0), "Removing last phrase should fail")
+
+        // Verify phrase still exists
+        XCTAssertEqual(settings.phraseCount(for: .morning), 1, "Should still have 1 phrase")
+        XCTAssertEqual(settings.phrases(for: .morning)?.first, "Only Phrase", "Original phrase should remain")
+    }
+
+    func testRemovePhraseSucceedsWithMultiple() {
+        let settings = TimeBasedPhraseSettings()
+        settings.updatePhrases(for: .morning, phrases: ["Phrase 1", "Phrase 2", "Phrase 3"])
+
+        // Remove middle phrase
+        XCTAssertTrue(settings.removePhrase(from: .morning, at: 1), "Removing phrase should succeed when count > 1")
+        XCTAssertEqual(settings.phraseCount(for: .morning), 2, "Should have 2 phrases remaining")
+        XCTAssertEqual(settings.phrases(for: .morning), ["Phrase 1", "Phrase 3"], "Correct phrase should be removed")
+    }
+
+    func testRemovePhraseFromNonePeriodFails() {
+        let settings = TimeBasedPhraseSettings()
+        XCTAssertFalse(settings.removePhrase(from: .none, at: 0), "Removing from .none period should fail")
+    }
+
+    func testRemovePhraseWithInvalidIndexFails() {
+        let settings = TimeBasedPhraseSettings()
+        settings.updatePhrases(for: .morning, phrases: ["Phrase 1", "Phrase 2"])
+
+        XCTAssertFalse(settings.removePhrase(from: .morning, at: 5), "Removing at invalid index should fail")
+        XCTAssertFalse(settings.removePhrase(from: .morning, at: -1), "Removing at negative index should fail")
+    }
+
+    // MARK: - Story 11.2 Task 5.4: Reset to Defaults Tests
+
+    func testResetToDefaultsClearsCustomPhrases() {
+        // Task 5.4: Test resetToDefaults clears custom phrases
+        let settings = TimeBasedPhraseSettings()
+
+        // Set custom phrases for multiple periods
+        settings.updatePhrases(for: .morning, phrases: ["Custom Morning"])
+        settings.updatePhrases(for: .lunch, phrases: ["Custom Lunch"])
+        settings.updatePhrases(for: .evening, phrases: ["Custom Evening"])
+
+        // Verify custom phrases are set
+        XCTAssertTrue(settings.hasCustomPhrases(for: .morning), "Morning should have custom phrases")
+        XCTAssertTrue(settings.hasCustomPhrases(for: .lunch), "Lunch should have custom phrases")
+
+        // Reset to defaults
+        settings.resetToDefaults()
+
+        // Verify custom phrases are cleared
+        XCTAssertFalse(settings.hasCustomPhrases(for: .morning), "Morning should not have custom phrases after reset")
+        XCTAssertFalse(settings.hasCustomPhrases(for: .lunch), "Lunch should not have custom phrases after reset")
+        XCTAssertFalse(settings.hasCustomPhrases(for: .evening), "Evening should not have custom phrases after reset")
+
+        // Verify UserDefaults is cleared
+        let persistedData = UserDefaults.standard.data(forKey: "com.callivox.time_based_custom_phrases")
+        XCTAssertNil(persistedData, "UserDefaults should be cleared after reset")
+
+        // Verify default phrases are returned
+        let morningPhrases = settings.phrases(for: .morning)
+        XCTAssertTrue(morningPhrases?.contains("Bonjour") ?? false, "Should return default phrases after reset")
+    }
+
+    // MARK: - Story 11.2 Task 5.5: Custom Over Default Priority Tests
+
+    func testPhrasesForCurrentPeriodReturnsCustomOverDefault() {
+        // Task 5.5: Test phrasesForCurrentPeriod returns custom over default
+        let settings = TimeBasedPhraseSettings()
+        settings.isEnabled = true
+
+        // Set custom phrases for morning
+        let customPhrases = ["Custom 1", "Custom 2", "Custom 3"]
+        settings.updatePhrases(for: .morning, phrases: customPhrases)
+
+        // Verify custom phrases are returned
+        let returnedPhrases = settings.phrases(for: .morning)
+        XCTAssertEqual(returnedPhrases, customPhrases, "Custom phrases should take precedence over defaults")
+        XCTAssertFalse(returnedPhrases?.contains("Bonjour") ?? true, "Default phrases should not be included")
+    }
+
+    func testPhrasesForPeriodReturnsDefaultsWhenNoCustom() {
+        let settings = TimeBasedPhraseSettings()
+
+        // Verify defaults are returned when no custom phrases are set
+        let phrases = settings.phrases(for: .morning)
+        XCTAssertTrue(phrases?.contains("Bonjour") ?? false, "Should return default phrases when no custom")
+        XCTAssertTrue(phrases?.contains("Café") ?? false, "Should return default phrases when no custom")
+    }
+
+    func testEmptyCustomPhrasesArrayFallsBackToDefaults() {
+        let settings = TimeBasedPhraseSettings()
+
+        // Set empty custom phrases (edge case)
+        settings.customPhrases["morning"] = []
+
+        // Should fall back to defaults
+        let phrases = settings.phrases(for: .morning)
+        XCTAssertTrue(phrases?.contains("Bonjour") ?? false, "Empty custom array should fall back to defaults")
+    }
+
+    // MARK: - Story 11.2: Additional Edge Case Tests
+
+    func testUpdatePhrasesLimitsTo6() {
+        let settings = TimeBasedPhraseSettings()
+
+        // Try to set 10 phrases
+        let manyPhrases = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+        settings.updatePhrases(for: .morning, phrases: manyPhrases)
+
+        // Verify only 6 are stored
+        XCTAssertEqual(settings.phraseCount(for: .morning), 6, "Update should limit to 6 phrases")
+        XCTAssertEqual(settings.phrases(for: .morning), ["1", "2", "3", "4", "5", "6"], "Should keep first 6 phrases")
+    }
+
+    func testHasCustomPhrasesForPeriod() {
+        let settings = TimeBasedPhraseSettings()
+
+        // Initially no custom phrases
+        XCTAssertFalse(settings.hasCustomPhrases(for: .morning), "Should not have custom phrases initially")
+
+        // Set custom phrases
+        settings.updatePhrases(for: .morning, phrases: ["Custom"])
+        XCTAssertTrue(settings.hasCustomPhrases(for: .morning), "Should have custom phrases after setting")
+
+        // None period should always return false
+        XCTAssertFalse(settings.hasCustomPhrases(for: .none), "None period should never have custom phrases")
+    }
+
+    func testPhraseCountForPeriod() {
+        let settings = TimeBasedPhraseSettings()
+
+        // Default count
+        XCTAssertEqual(settings.phraseCount(for: .morning), 4, "Default morning should have 4 phrases")
+
+        // Custom count
+        settings.updatePhrases(for: .morning, phrases: ["One", "Two"])
+        XCTAssertEqual(settings.phraseCount(for: .morning), 2, "Custom morning should have 2 phrases")
+
+        // None period
+        XCTAssertEqual(settings.phraseCount(for: .none), 0, "None period should have 0 phrases")
+    }
+
+    // Code Review Fix M1: Updated test to match corrected time range display
+    func testTimeRangeDisplayProperty() {
+        XCTAssertEqual(TimePeriod.morning.timeRangeDisplay, "7h-8h59")
+        XCTAssertEqual(TimePeriod.lunch.timeRangeDisplay, "12h-13h59")
+        XCTAssertEqual(TimePeriod.evening.timeRangeDisplay, "18h-19h59")
+        XCTAssertEqual(TimePeriod.night.timeRangeDisplay, "21h-22h59")
+        XCTAssertEqual(TimePeriod.none.timeRangeDisplay, "")
+    }
+
+    // MARK: - Code Review Fix M4: Missing Test for updatePhrases with .none
+
+    func testUpdatePhrasesForNonePeriodDoesNothing() {
+        let settings = TimeBasedPhraseSettings()
+
+        // Try to update .none period
+        settings.updatePhrases(for: .none, phrases: ["Test Phrase"])
+
+        // Verify nothing was stored
+        XCTAssertNil(settings.phrases(for: .none), "updatePhrases for .none should do nothing")
+        XCTAssertFalse(settings.hasCustomPhrases(for: .none), "Should not have custom phrases for .none")
     }
 }

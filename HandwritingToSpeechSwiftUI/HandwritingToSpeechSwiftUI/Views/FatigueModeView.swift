@@ -4,6 +4,7 @@
 //
 //  Story 10.2: Create Minimal Fatigue Mode Interface
 //  Story 10.3: Updated to use customizable messages from FatigueModeSettings
+//  Story 11.3: Scanning mode integration (AC5)
 //  Provides an extremely simplified interface with only essential buttons
 //  for users with very limited energy.
 //
@@ -92,6 +93,15 @@ struct FatigueModeView: View {
     // Replaces hardcoded messages array with user-customizable messages
     @ObservedObject private var messageSettings = FatigueModeSettings.shared
 
+    // Story 11.3 Task 7.1: Add scanning mode references (AC5)
+    @ObservedObject private var scanningSettings = ScanningModeSettings.shared
+    @ObservedObject private var scanningController = ScanningModeController.shared
+
+    /// Task 7.5: Total scannable items (messages + exit button)
+    private var totalScannableItems: Int {
+        messageSettings.customMessages.count + 1  // +1 for exit button
+    }
+
     var body: some View {
         ZStack {
             // AC1: Calm, low-contrast dark background
@@ -100,37 +110,59 @@ struct FatigueModeView: View {
                 .ignoresSafeArea()
 
             // Task 1.3, 1.6: VStack with vertical column layout
-            VStack(spacing: 16) {
-                Spacer()
-
-                // Story 10.3 AC4: Message buttons from customizable settings
-                // Task 4.1, 4.3: Display custom messages with custom colors
-                ForEach(messageSettings.customMessages) { message in
-                    FatigueModeButton(
-                        message: message.text,
-                        backgroundColor: message.color,
-                        onTap: {
-                            // Story 10.3 Task 4.4: Speak the custom message text via TTS
-                            speakMessage(message.text)
-                        }
-                    )
-                }
-
-                // AC4, Task 3.1: Exit button with distinct styling (gray color)
-                // M2 Fix (Code Review): Added icon for visual exit indicator
-                FatigueModeButton(
-                    message: "Mode normal",
-                    backgroundColor: Color.gray,
-                    icon: "arrow.backward.circle",
-                    onTap: {
-                        // Task 3.2: Show confirmation dialog
+            // Story 11.3 Task 7.2: Wrap in ScannableContainer (AC5)
+            ScannableContainer(
+                itemCount: totalScannableItems,
+                onSelect: { index in
+                    // Task 7.4, 7.5: Handle selection based on index
+                    if index < messageSettings.customMessages.count {
+                        // Message button: speak the message
+                        let message = messageSettings.customMessages[index]
+                        speakMessage(message.text)
+                    } else {
+                        // Exit button: show confirmation
                         showExitConfirmation = true
                     }
-                )
-                // Task 3.1: Additional accessibility hint for exit button
-                .accessibilityHint("Retourne à l'interface normale")
+                }
+            ) { highlightedIndex in
+                VStack(spacing: 16) {
+                    Spacer()
 
-                Spacer()
+                    // Story 10.3 AC4: Message buttons from customizable settings
+                    // Task 4.1, 4.3: Display custom messages with custom colors
+                    ForEach(Array(messageSettings.customMessages.enumerated()), id: \.element.id) { index, message in
+                        FatigueModeButton(
+                            message: message.text,
+                            backgroundColor: message.color,
+                            onTap: {
+                                // Story 10.3 Task 4.4: Speak the custom message text via TTS
+                                // Task 7.6: Existing tap behavior preserved
+                                speakMessage(message.text)
+                            }
+                        )
+                        // Task 7.3: Apply scanning highlight
+                        .scanningHighlight(index: index, highlightedIndex: highlightedIndex)
+                    }
+
+                    // AC4, Task 3.1: Exit button with distinct styling (gray color)
+                    // M2 Fix (Code Review): Added icon for visual exit indicator
+                    FatigueModeButton(
+                        message: "Mode normal",
+                        backgroundColor: Color.gray,
+                        icon: "arrow.backward.circle",
+                        onTap: {
+                            // Task 3.2: Show confirmation dialog
+                            // Task 7.6: Existing tap behavior preserved
+                            showExitConfirmation = true
+                        }
+                    )
+                    // Task 3.1: Additional accessibility hint for exit button
+                    .accessibilityHint("Retourne à l'interface normale")
+                    // Task 7.5: Exit button is last in scanning sequence
+                    .scanningHighlight(index: messageSettings.customMessages.count, highlightedIndex: highlightedIndex)
+
+                    Spacer()
+                }
             }
             // Task 1.6: Horizontal padding (32pt)
             .padding(.horizontal, 32)

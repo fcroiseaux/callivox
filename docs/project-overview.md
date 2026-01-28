@@ -33,6 +33,7 @@ CalliVox is an accessibility application designed to help users with speech impa
 - **Language:** Swift
 - **Framework:** SwiftUI
 - **Purpose:** Primary user interface for text-to-speech with Apple Pencil support
+- **Accessibility:** Enhanced mode (80pt targets), scanning mode, fatigue mode, emergency panel
 
 ### 3. Website (CalliVox-Site)
 
@@ -48,7 +49,7 @@ CalliVox is an accessibility application designed to help users with speech impa
 | **Framework** | NestJS | SwiftUI | Dazzle Template |
 | **Authentication** | JWT + Apple Sign In | Apple Sign In + Keychain | N/A |
 | **Database** | PostgreSQL | Local Storage | N/A |
-| **TTS Engine** | N/A | AVFoundation + ElevenLabs | N/A |
+| **TTS Engine** | N/A | AVFoundation + Gradium | N/A |
 
 ## Key Features
 
@@ -58,7 +59,13 @@ CalliVox is an accessibility application designed to help users with speech impa
 4. **Auto-Read Mode** - Automatic speech after typing pause (3 seconds)
 5. **Usage Statistics** - Tracks usage patterns with privacy-preserving pseudonymization
 6. **Offline Support** - Usage logging works offline with sync capability
-7. **ElevenLabs Integration** - High-quality AI voice synthesis
+7. **Gradium TTS Integration** - High-quality AI voice synthesis (fallback to iOS native)
+8. **AI-Powered Suggestions** - Cerebras LLM generates contextual response suggestions
+9. **Enhanced Accessibility Mode** - Enlarged touch targets (80pt), high contrast, reduced animations
+10. **Time-based Predictive Phrases** - Context-aware suggestions based on time of day (morning, lunch, evening, night)
+11. **Scanning Mode** - Sequential button highlighting for severely reduced mobility users
+12. **Emergency Panel** - Quick access to 4 customizable emergency messages
+13. **Fatigue Mode** - Simplified interface with 4 large essential buttons for high fatigue situations
 
 ## Architecture Diagram
 
@@ -81,11 +88,18 @@ CalliVox is an accessibility application designed to help users with speech impa
 │           │                               │                      │
 │           ▼                               ▼                      │
 │  ┌──────────────────┐         ┌──────────────────────────────┐  │
-│  │   ElevenLabs     │         │       PostgreSQL             │  │
+│  │   Gradium TTS    │         │       PostgreSQL             │  │
 │  │   API            │         │       Database               │  │
 │  │  (Voice Synth)   │         │  - UserProfile               │  │
 │  └──────────────────┘         │  - UsageStat                 │  │
 │                               └──────────────────────────────┘  │
+│           │                                                      │
+│           ▼                                                      │
+│  ┌──────────────────┐                                           │
+│  │   Cerebras LLM   │                                           │
+│  │   API            │                                           │
+│  │  (AI Suggestions)│                                           │
+│  └──────────────────┘                                           │
 │                                                                  │
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │                    Marketing Website                      │   │
