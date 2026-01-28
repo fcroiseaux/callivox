@@ -3,6 +3,8 @@
 //  HandwritingToSpeechSwiftUI
 //
 //  Story 7.1: Accessibility Settings Screen (AC2, AC5, AC6)
+//  Story 10.1: Fatigue Mode settings section (AC2)
+//  Story 10.3: Replace placeholder with FatigueModeSettingsView
 //  Sheet-style view for configuring Enhanced Accessibility mode
 //
 
@@ -49,11 +51,129 @@ struct AccessibilitySettingsView: View {
                     Text("Ce mode adapte l'interface pour les utilisateurs ayant des difficultés motrices. Les boutons seront agrandis à 80pt, les animations réduites, et le contraste augmenté.")
                 }
 
-                // Placeholder section for future settings (Stories 7.2, 7.3, 7.4)
-                // These will be added in subsequent stories:
-                // - Story 7.2: Enlarged touch targets (80pt)
-                // - Story 7.3: High contrast and reduced animations
-                // - Story 7.4: Confirmation dialogs for destructive actions
+                // Story 7.4 AC4: Confirmation dialogs toggle section
+                Section {
+                    Toggle(isOn: $accessibilitySettings.requireConfirmationDialogs) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            // Story 7.4 AC4 Task 2.1: Toggle label
+                            Text("Demander confirmation")
+                                .font(.title3)
+                                .fontWeight(.medium)
+
+                            // Story 7.4 AC4 Task 2.2: Description text
+                            Text("Affiche un dialogue avant les actions destructives (effacer, masquer)")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .onChange(of: accessibilitySettings.requireConfirmationDialogs) { _ in
+                        // Haptic feedback on toggle (.medium)
+                        let impact = UIImpactFeedbackGenerator(style: .medium)
+                        impact.impactOccurred()
+                    }
+                    // Story 7.4 AC4 Task 2.3: Minimum 60pt height
+                    .frame(minHeight: 60)
+                    .accessibilityLabel("Demander confirmation")
+                    .accessibilityHint("Active les dialogues de confirmation avant les actions destructives")
+                    .accessibilityValue(accessibilitySettings.requireConfirmationDialogs ? "Activé" : "Désactivé")
+                } header: {
+                    Text("Sécurité")
+                } footer: {
+                    Text("Lorsque cette option est activée, une confirmation sera demandée avant d'effacer le texte ou de masquer les suggestions.")
+                }
+
+                // Story 10.1 AC2: Fatigue Mode settings section
+                // Task 3.1, 3.2, 3.3, 3.4, 3.5, 3.6
+                Section {
+                    // Story 10.1 Task 3.2: Toggle for fatigue mode
+                    Toggle(isOn: $accessibilitySettings.isFatigueModeEnabled) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Activer le mode fatigue")
+                                .font(.title3)
+                                .fontWeight(.medium)
+
+                            Text("Interface simplifiée avec gros boutons pour les moments de fatigue intense")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    // Story 10.1 Task 3.6: Haptic feedback on toggle change
+                    .onChange(of: accessibilitySettings.isFatigueModeEnabled) { _ in
+                        let impact = UIImpactFeedbackGenerator(style: .medium)
+                        impact.impactOccurred()
+                    }
+                    // Story 10.1 Task 3.4: Minimum 60pt height
+                    .frame(minHeight: 60)
+                    // Story 10.1 Task 3.5: French accessibility labels
+                    .accessibilityLabel("Activer le mode fatigue")
+                    .accessibilityHint("Active l'interface simplifiée pour les moments de fatigue intense")
+                    .accessibilityValue(accessibilitySettings.isFatigueModeEnabled ? "Activé" : "Désactivé")
+
+                    // Story 10.3 Task 5.1, 5.2: NavigationLink to FatigueModeSettingsView
+                    NavigationLink {
+                        FatigueModeSettingsView()
+                            .environmentObject(accessibilitySettings)
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "slider.horizontal.3")
+                                .font(.title2)
+                                .foregroundColor(.orange)
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Personnaliser le mode fatigue")
+                                    .font(.title3)
+                                    .fontWeight(.medium)
+
+                                Text("Choisir les messages affichés en mode fatigue")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        // Story 10.1 Task 3.4: Minimum 60pt height
+                        .frame(minHeight: 60)
+                    }
+                    // Story 10.1 Task 3.5: French VoiceOver accessibility labels
+                    .accessibilityLabel("Personnaliser le mode fatigue")
+                    .accessibilityHint("Ouvre la configuration des messages du mode fatigue")
+                } header: {
+                    // Story 10.1 Task 3.1: Section header
+                    Text("Mode Fatigue")
+                } footer: {
+                    Text("Le mode fatigue offre une interface épurée avec seulement quelques boutons essentiels pour communiquer rapidement lorsque vous êtes très fatigué.")
+                }
+
+                // Story 9.3 AC1: Emergency messages configuration section
+                // Task 5.1, 5.2: NavigationLink with icon and label
+                Section {
+                    NavigationLink {
+                        EmergencyMessagesSettingsView()
+                            .environmentObject(accessibilitySettings)
+                    } label: {
+                        HStack(spacing: 12) {
+                            // Task 5.2: Icon
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.title2)
+                                .foregroundColor(.red)
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Messages d'urgence")
+                                    .font(.title3)
+                                    .fontWeight(.medium)
+
+                                Text("Personnaliser les 4 messages du panneau d'urgence")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        // Task 5.3: Minimum 60pt height
+                        .frame(minHeight: 60)
+                    }
+                    // Task 5.4: French VoiceOver accessibility labels (AC6)
+                    .accessibilityLabel("Messages d'urgence")
+                    .accessibilityHint("Ouvre la configuration des messages du panneau d'urgence")
+                } header: {
+                    Text("Urgence")
+                }
             }
             .listStyle(.insetGrouped)
             // Story 7.1 AC2: Header "Accessibilité"
@@ -82,6 +202,9 @@ struct AccessibilitySettingsView: View {
         }
     }
 }
+
+// MARK: - Story 10.3 Task 5.3: FatigueModeSettingsPlaceholder DELETED
+// Dead code cleanup - replaced by FatigueModeSettingsView in FatigueModeSettingsView.swift
 
 // MARK: - Preview
 #Preview {

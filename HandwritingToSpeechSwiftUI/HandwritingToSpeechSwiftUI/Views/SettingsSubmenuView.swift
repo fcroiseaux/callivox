@@ -6,11 +6,14 @@ import UIKit
 
 /// Story 6.2 AC2: Settings submenu with all configuration options
 /// Modal presentation consistent with Story 6.1 GuidanceContextModal pattern
+/// Story 7.3: Added accessibility settings for reduced animations and high contrast
 @MainActor
 struct SettingsSubmenuView: View {
     let onSelectSetting: (SettingType) -> Void
     let onDismiss: () -> Void
     let showPrivacyOption: Bool  // Based on AppConfig.Features.skipAuthentication
+    // Story 7.3 Task 4.1: Add accessibility settings for conditional opacity and animations
+    @EnvironmentObject var accessibilitySettings: AccessibilitySettings
 
     // Story 6.2 AC2: Available settings that were moved from main sidebar
     enum SettingType {
@@ -45,7 +48,10 @@ struct SettingsSubmenuView: View {
                         icon: "waveform",
                         title: "Service TTS",
                         color: .mint,
-                        action: { handleSelection(.tts) }
+                        action: { handleSelection(.tts) },
+                        secondaryTextOpacity: accessibilitySettings.secondaryTextOpacity,  // Story 7.3 AC1
+                        scaleAnimationAmount: accessibilitySettings.scaleAnimationAmount,  // Story 7.3 AC2
+                        animationDuration: accessibilitySettings.animationDuration  // Story 7.3 AC2
                     )
 
                     // Story 6.2 AC2: Service IA button
@@ -53,7 +59,10 @@ struct SettingsSubmenuView: View {
                         icon: "brain",
                         title: "Service IA",
                         color: .indigo,
-                        action: { handleSelection(.llm) }
+                        action: { handleSelection(.llm) },
+                        secondaryTextOpacity: accessibilitySettings.secondaryTextOpacity,  // Story 7.3 AC1
+                        scaleAnimationAmount: accessibilitySettings.scaleAnimationAmount,  // Story 7.3 AC2
+                        animationDuration: accessibilitySettings.animationDuration  // Story 7.3 AC2
                     )
 
                     // Story 6.2 AC2: Personnalisation IA button
@@ -61,7 +70,10 @@ struct SettingsSubmenuView: View {
                         icon: "person.text.rectangle",
                         title: "Personnalisation IA",
                         color: .cyan,
-                        action: { handleSelection(.personalization) }
+                        action: { handleSelection(.personalization) },
+                        secondaryTextOpacity: accessibilitySettings.secondaryTextOpacity,  // Story 7.3 AC1
+                        scaleAnimationAmount: accessibilitySettings.scaleAnimationAmount,  // Story 7.3 AC2
+                        animationDuration: accessibilitySettings.animationDuration  // Story 7.3 AC2
                     )
 
                     // Story 7.1 AC1: Accessibilité button
@@ -69,7 +81,10 @@ struct SettingsSubmenuView: View {
                         icon: "accessibility",
                         title: "Accessibilité",
                         color: .orange,
-                        action: { handleSelection(.accessibility) }
+                        action: { handleSelection(.accessibility) },
+                        secondaryTextOpacity: accessibilitySettings.secondaryTextOpacity,  // Story 7.3 AC1
+                        scaleAnimationAmount: accessibilitySettings.scaleAnimationAmount,  // Story 7.3 AC2
+                        animationDuration: accessibilitySettings.animationDuration  // Story 7.3 AC2
                     )
 
                     // Story 6.2 AC2: Confidentialité button (conditional)
@@ -78,7 +93,10 @@ struct SettingsSubmenuView: View {
                             icon: "lock.shield",
                             title: "Confidentialité",
                             color: .teal,
-                            action: { handleSelection(.privacy) }
+                            action: { handleSelection(.privacy) },
+                            secondaryTextOpacity: accessibilitySettings.secondaryTextOpacity,  // Story 7.3 AC1
+                            scaleAnimationAmount: accessibilitySettings.scaleAnimationAmount,  // Story 7.3 AC2
+                            animationDuration: accessibilitySettings.animationDuration  // Story 7.3 AC2
                         )
                     }
                 }
@@ -102,7 +120,13 @@ struct SettingsSubmenuView: View {
                         .background(Color(.systemGray4))
                         .cornerRadius(12)
                 }
-                .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
+                // Story 7.3 AC2: Use configurable animation parameters
+                .buttonStyle(ScaleButtonStyle(
+                    scaleAmount: accessibilitySettings.scaleAnimationAmount,
+                    pressedColor: .clear,
+                    normalColor: .clear,
+                    animationDuration: accessibilitySettings.animationDuration
+                ))
                 .padding(.horizontal, 24)
                 .padding(.bottom, 50)
                 .accessibilityLabel("Fermer")
@@ -124,12 +148,17 @@ struct SettingsSubmenuView: View {
 
 // MARK: - Story 6.2: Settings Menu Button Component
 /// Individual button in settings submenu with 60pt minimum height (AC2)
+/// Story 7.3: Updated with configurable opacity and animation parameters
 @MainActor
 struct SettingsMenuButton: View {
     let icon: String
     let title: String
     let color: Color
     let action: () -> Void
+    // Story 7.3 AC1, AC2: Configurable animation parameters
+    var secondaryTextOpacity: Double = 0.6
+    var scaleAnimationAmount: CGFloat = 0.97
+    var animationDuration: Double = 0.2
 
     var body: some View {
         Button(action: action) {
@@ -142,7 +171,8 @@ struct SettingsMenuButton: View {
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.body)
-                    .foregroundColor(.white.opacity(0.6))
+                    // Story 7.3 AC1, Task 4.2: Use configurable secondary text opacity
+                    .foregroundColor(.white.opacity(secondaryTextOpacity))
             }
             .foregroundColor(.white)
             .padding(.horizontal, 20)
@@ -157,7 +187,13 @@ struct SettingsMenuButton: View {
             )
             .cornerRadius(12)
         }
-        .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
+        // Story 7.3 AC2: Use configurable animation parameters
+        .buttonStyle(ScaleButtonStyle(
+            scaleAmount: scaleAnimationAmount,
+            pressedColor: .clear,
+            normalColor: .clear,
+            animationDuration: animationDuration
+        ))
         // Story 6.2 AC5: French accessibility labels
         .accessibilityLabel(title)
         .accessibilityHint("Ouvre les réglages \(title.lowercased())")
@@ -165,10 +201,12 @@ struct SettingsMenuButton: View {
 }
 
 // MARK: - Preview
+// Story 7.3: Preview with AccessibilitySettings environment object
 #Preview {
     SettingsSubmenuView(
         onSelectSetting: { _ in },
         onDismiss: {},
         showPrivacyOption: true
     )
+    .environmentObject(AccessibilitySettings())
 }

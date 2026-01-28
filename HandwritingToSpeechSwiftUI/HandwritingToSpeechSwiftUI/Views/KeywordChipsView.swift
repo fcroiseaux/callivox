@@ -24,6 +24,10 @@ import UIKit
 struct KeywordChipsView: View {
     @ObservedObject private var suggestionService = SuggestionService.shared
     @EnvironmentObject var speechService: SpeechService
+    // Story 7.2: Add accessibility settings for conditional sizing (AC1, AC5)
+    @EnvironmentObject var accessibilitySettings: AccessibilitySettings
+    // Story 8.2 Task 3.3: Add preset manager for recent history tracking
+    @EnvironmentObject var presetManager: PresetSentenceManager
 
     var body: some View {
         // Only show when keywords are available
@@ -45,7 +49,11 @@ struct KeywordChipsView: View {
                     ForEach(suggestionService.keywords, id: \.self) { keyword in
                         KeywordChip(
                             keyword: keyword,
-                            onTap: { speakKeyword(keyword) }
+                            chipHeight: accessibilitySettings.chipHeight,  // Story 7.2 AC1
+                            onTap: { speakKeyword(keyword) },
+                            // Story 7.3 AC2: Conditional animation values
+                            scaleAnimationAmount: accessibilitySettings.isEnhancedModeEnabled ? 0.98 : 0.92,
+                            animationDuration: accessibilitySettings.isEnhancedModeEnabled ? 0.05 : 0.1
                         )
                     }
                 }
@@ -68,6 +76,9 @@ struct KeywordChipsView: View {
         // Speak the keyword
         speechService.speakText(keyword)
 
+        // Story 8.2 Task 3.3, AC3: Add to recent phrases history
+        presetManager.addToRecentHistory(keyword)
+
         // Add to conversation history for context
         suggestionService.addToHistory(userMessage: keyword)
 
@@ -83,10 +94,16 @@ struct KeywordChipsView: View {
 
 /// Individual keyword chip button.
 /// Speaks the keyword immediately when tapped.
+/// Story 7.2: Accepts chipHeight parameter for Enhanced Mode conditional sizing
+/// Story 7.3: Accepts animation parameters for reduced motion
 @MainActor
 struct KeywordChip: View {
     let keyword: String
+    let chipHeight: CGFloat  // Story 7.2 AC1: Conditional height (80pt enhanced, 60pt standard)
     let onTap: () -> Void
+    // Story 7.3 AC2: Animation parameters for reduced motion
+    var scaleAnimationAmount: CGFloat = 0.92
+    var animationDuration: Double = 0.1
 
     var body: some View {
         Button(action: onTap) {
@@ -105,10 +122,14 @@ struct KeywordChip: View {
                     RoundedRectangle(cornerRadius: 24)
                         .stroke(Color.accentColor.opacity(0.3), lineWidth: 1)
                 )
-                // Story 5.1 AC1: Ensure minimum touch target height of 60pt
-                .frame(minHeight: 60)
+                // Story 7.2 AC1: Conditional touch target height (80pt enhanced, 60pt standard)
+                .frame(minHeight: chipHeight)
         }
-        .buttonStyle(KeywordChipButtonStyle())
+        // Story 7.3 AC2: Use configurable animation parameters
+        .buttonStyle(KeywordChipButtonStyle(
+            scaleAmount: scaleAnimationAmount,
+            animationDuration: animationDuration
+        ))
         .accessibilityLabel(keyword)
         .accessibilityHint("Double-tapez pour prononcer \(keyword)")
     }
@@ -117,12 +138,19 @@ struct KeywordChip: View {
 // MARK: - KeywordChipButtonStyle
 
 /// Custom button style for keyword chips with scale and color feedback.
+/// Story 7.3 AC2: Updated with configurable animation parameters
 struct KeywordChipButtonStyle: ButtonStyle {
+    // Story 7.3 AC2: Configurable animation parameters
+    var scaleAmount: CGFloat = 0.92
+    var animationDuration: Double = 0.1
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.92 : 1.0)
+            // Story 7.3 AC2: Use configurable scale amount
+            .scaleEffect(configuration.isPressed ? scaleAmount : 1.0)
             .opacity(configuration.isPressed ? 0.7 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+            // Story 7.3 AC2: Use configurable animation duration
+            .animation(.easeInOut(duration: animationDuration), value: configuration.isPressed)
     }
 }
 
@@ -132,6 +160,8 @@ struct KeywordChipButtonStyle: ButtonStyle {
     VStack {
         KeywordChipsView()
             .environmentObject(SpeechService.shared)
+            .environmentObject(AccessibilitySettings())  // Story 7.2: Required for conditional sizing
+            .environmentObject(PresetSentenceManager.shared)  // Story 8.2: Required for recent history
     }
     .padding()
 }

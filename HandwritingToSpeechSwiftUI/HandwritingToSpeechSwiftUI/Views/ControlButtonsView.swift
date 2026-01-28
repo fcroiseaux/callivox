@@ -2,12 +2,17 @@ import SwiftUI
 import UIKit
 
 // MARK: - Story 6.2: Primary Speak Button (AC1 - 200x80pt minimum)
+// Story 7.2: Accepts primaryButtonHeight for Enhanced Mode conditional sizing
+// Story 7.3: Accepts animation parameters for reduced motion
 // Enhanced speak button component - PRIMARY ACTION in reorganized sidebar
 @MainActor
 struct SpeakControlButton: View {
     var text: String
     var isLoading: Bool
     var onSpeak: () -> Void
+    var primaryButtonHeight: CGFloat  // Story 7.2 AC4: Conditional height (100pt enhanced, 80pt standard)
+    var scaleAnimationAmount: CGFloat = 0.95  // Story 7.3 AC2: Default for backward compatibility
+    var animationDuration: Double = 0.2       // Story 7.3 AC2: Default for backward compatibility
 
     // Create separate components for the button
     private var buttonBackground: some View {
@@ -48,7 +53,7 @@ struct SpeakControlButton: View {
             }
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .frame(minWidth: 200, minHeight: 80)  // Story 6.2 AC1: 200x80pt minimum
+            .frame(minWidth: 200, minHeight: primaryButtonHeight)  // Story 7.2 AC4: Conditional height
             .padding(.vertical, 12)
             .background(buttonBackground)
             .overlay(buttonBorder)
@@ -56,9 +61,10 @@ struct SpeakControlButton: View {
             .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 3)
         }
         .buttonStyle(ScaleButtonStyle(
-            scaleAmount: 0.95,
+            scaleAmount: scaleAnimationAmount,  // Story 7.3 AC2: Conditional animation
             pressedColor: Color.blue.opacity(0.7),
-            normalColor: .clear
+            normalColor: .clear,
+            animationDuration: animationDuration  // Story 7.3 AC2
         ))
         .disabled(isLoading || text.isEmpty)
         .opacity((isLoading || text.isEmpty) ? 0.6 : 1.0)
@@ -70,12 +76,17 @@ struct SpeakControlButton: View {
 }
 
 // MARK: - Story 6.2: Compact Repeat Button (AC1 - 95x60pt for side-by-side)
+// Story 7.2: Accepts buttonHeight for Enhanced Mode conditional sizing
+// Story 7.3: Accepts animation parameters for reduced motion
 // Secondary action button - simplified for horizontal layout
 @MainActor
 struct CompactRepeatButton: View {
     var lastText: String
     var isLoading: Bool
     var onRepeat: () -> Void
+    var buttonHeight: CGFloat  // Story 7.2 AC4: Conditional height (80pt enhanced, 60pt standard)
+    var scaleAnimationAmount: CGFloat = 0.97  // Story 7.3 AC2: Default for backward compatibility
+    var animationDuration: Double = 0.2       // Story 7.3 AC2: Default for backward compatibility
 
     var body: some View {
         Button(action: {
@@ -96,7 +107,7 @@ struct CompactRepeatButton: View {
             }
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .frame(minWidth: 95, minHeight: 60)  // Story 6.2 AC1: 95x60pt minimum
+            .frame(minWidth: 95, minHeight: buttonHeight)  // Story 7.2 AC4: Conditional height
             .background(
                 LinearGradient(
                     gradient: Gradient(colors: [Color.green, Color.green.opacity(0.8)]),
@@ -106,7 +117,12 @@ struct CompactRepeatButton: View {
             )
             .cornerRadius(10)
         }
-        .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
+        .buttonStyle(ScaleButtonStyle(
+            scaleAmount: scaleAnimationAmount,  // Story 7.3 AC2: Conditional animation
+            pressedColor: .clear,
+            normalColor: .clear,
+            animationDuration: animationDuration  // Story 7.3 AC2
+        ))
         .disabled(isLoading || lastText.isEmpty)
         .opacity((isLoading || lastText.isEmpty) ? 0.5 : 1.0)
         // Story 6.2 AC5: French accessibility labels
@@ -116,20 +132,34 @@ struct CompactRepeatButton: View {
 }
 
 // MARK: - Story 6.2: Compact Clear Button (AC1 - 95x60pt for side-by-side)
+// Story 7.2: Accepts buttonHeight for Enhanced Mode conditional sizing
+// Story 7.3: Accepts animation parameters for reduced motion
+// Story 7.4: Accepts requireConfirmation for confirmation dialog
 // Secondary action button - simplified for horizontal layout
 @MainActor
 struct CompactClearButton: View {
     @Binding var recognizedText: String
     @Binding var speakTask: Task<Void, Never>?
     var isLoading: Bool
+    var buttonHeight: CGFloat  // Story 7.2 AC4: Conditional height (80pt enhanced, 60pt standard)
+    var scaleAnimationAmount: CGFloat = 0.97  // Story 7.3 AC2: Default for backward compatibility
+    var animationDuration: Double = 0.2       // Story 7.3 AC2: Default for backward compatibility
+    var requireConfirmation: Bool = true      // Story 7.4 AC1, AC4: Default to true for safety
+
+    // Story 7.4 AC1 Task 3.1: State for confirmation dialog
+    @State private var showClearConfirmation: Bool = false
 
     var body: some View {
         Button(action: {
             // Story 6.2 AC4: Haptic feedback for action (.medium)
             let impact = UIImpactFeedbackGenerator(style: .medium)
             impact.impactOccurred()
-            recognizedText = ""
-            speakTask?.cancel()
+            // Story 7.4 AC1 Task 3.3: Show confirmation or clear immediately
+            if requireConfirmation && !recognizedText.isEmpty {
+                showClearConfirmation = true
+            } else {
+                performClear()
+            }
         }) {
             HStack(spacing: 4) {
                 Image(systemName: "xmark.circle")
@@ -140,7 +170,7 @@ struct CompactClearButton: View {
             }
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .frame(minWidth: 95, minHeight: 60)  // Story 6.2 AC1: 95x60pt minimum
+            .frame(minWidth: 95, minHeight: buttonHeight)  // Story 7.2 AC4: Conditional height
             .background(
                 LinearGradient(
                     gradient: Gradient(colors: [Color.red, Color.red.opacity(0.8)]),
@@ -150,26 +180,46 @@ struct CompactClearButton: View {
             )
             .cornerRadius(10)
         }
-        .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
+        .buttonStyle(ScaleButtonStyle(
+            scaleAmount: scaleAnimationAmount,  // Story 7.3 AC2: Conditional animation
+            pressedColor: .clear,
+            normalColor: .clear,
+            animationDuration: animationDuration  // Story 7.3 AC2
+        ))
         .disabled(isLoading || recognizedText.isEmpty)
         .opacity((isLoading || recognizedText.isEmpty) ? 0.5 : 1.0)
         // Story 6.2 AC5: French accessibility labels
         .accessibilityLabel("Effacer")
         .accessibilityHint(recognizedText.isEmpty ? "Aucun texte à effacer" : "Efface le texte saisi")
+        // Story 7.4 AC1 Task 3.4: Confirmation dialog
+        .alert("Effacer le texte ?", isPresented: $showClearConfirmation) {
+            Button("Annuler", role: .cancel) { }
+            Button("Effacer", role: .destructive) {
+                performClear()
+            }
+        }
+    }
+
+    // Story 7.4 Task 3.5: Extract clear action for reuse
+    private func performClear() {
+        recognizedText = ""
+        speakTask?.cancel()
     }
 }
 
 // Button style for improved interaction feedback
+// Story 7.3 AC2: Updated with configurable animation duration
 struct ScaleButtonStyle: ButtonStyle {
     var scaleAmount: CGFloat
     var pressedColor: Color
     var normalColor: Color
+    var animationDuration: Double = 0.2  // Story 7.3: Default for backward compatibility
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .background(configuration.isPressed ? pressedColor : normalColor)
             .scaleEffect(configuration.isPressed ? scaleAmount : 1.0)
-            .animation(.easeInOut(duration: 0.2), value: configuration.isPressed)
+            .animation(.easeInOut(duration: animationDuration), value: configuration.isPressed)
     }
 }
 
@@ -197,10 +247,14 @@ struct ControlButtonsView: View {
     // Story 7.1 Task 4.1: State for accessibility settings sheet
     @State private var showAccessibilitySettings: Bool = false
 
+    // Story 10.1 Task 2.1: State for fatigue mode view presentation
+    // H1 Fix (Code Review): Removed - presentation now handled by ContentView via onChange
+    // @State private var showFatigueModeView: Bool = false
+
     var body: some View {
         // Story 6.2 AC1, AC3: Reorganized VStack with clear hierarchy
         VStack(spacing: 16) {
-            // MARK: Story 6.2 AC1: PRIMARY ACTION - PARLER (200x80pt minimum)
+            // MARK: Story 7.2 AC4: PRIMARY ACTION - PARLER (conditional 200x100pt enhanced, 200x80pt standard)
             SpeakControlButton(
                 text: recognizedText,
                 isLoading: speechService.isLoading,
@@ -208,10 +262,13 @@ struct ControlButtonsView: View {
                     guard !recognizedText.isEmpty else { return }
                     speechService.speakText(recognizedText)
                     recognizedText = ""
-                }
+                },
+                primaryButtonHeight: accessibilitySettings.primaryButtonHeight,  // Story 7.2 AC4
+                scaleAnimationAmount: accessibilitySettings.scaleAnimationAmount,  // Story 7.3 AC2
+                animationDuration: accessibilitySettings.animationDuration  // Story 7.3 AC2
             )
 
-            // MARK: Story 6.2 AC1: SECONDARY ACTIONS - Side by side (95x60pt each)
+            // MARK: Story 7.2 AC4: SECONDARY ACTIONS - Side by side (conditional 95x80pt enhanced, 95x60pt standard)
             HStack(spacing: 12) {
                 CompactRepeatButton(
                     lastText: speechService.lastSpokenText,
@@ -219,17 +276,24 @@ struct ControlButtonsView: View {
                     onRepeat: {
                         guard !speechService.lastSpokenText.isEmpty else { return }
                         speechService.speakText(speechService.lastSpokenText)
-                    }
+                    },
+                    buttonHeight: accessibilitySettings.buttonHeight,  // Story 7.2 AC4
+                    scaleAnimationAmount: accessibilitySettings.scaleAnimationAmount,  // Story 7.3 AC2
+                    animationDuration: accessibilitySettings.animationDuration  // Story 7.3 AC2
                 )
 
                 CompactClearButton(
                     recognizedText: $recognizedText,
                     speakTask: $speakTask,
-                    isLoading: speechService.isLoading
+                    isLoading: speechService.isLoading,
+                    buttonHeight: accessibilitySettings.buttonHeight,  // Story 7.2 AC4
+                    scaleAnimationAmount: accessibilitySettings.scaleAnimationAmount,  // Story 7.3 AC2
+                    animationDuration: accessibilitySettings.animationDuration,  // Story 7.3 AC2
+                    requireConfirmation: accessibilitySettings.requireConfirmationDialogs  // Story 7.4 AC1 Task 3.6
                 )
             }
 
-            // MARK: Story 6.2 AC1: TERTIARY - Mes phrases (50pt minimum)
+            // MARK: Story 7.2 AC4: TERTIARY - Mes phrases (conditional 60pt enhanced, 50pt standard)
             Button(action: {
                 // Story 6.2 AC4: Haptic feedback for navigation (.light)
                 let impact = UIImpactFeedbackGenerator(style: .light)
@@ -245,7 +309,7 @@ struct ControlButtonsView: View {
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .frame(minHeight: 50)  // Story 6.2 AC1: 50pt minimum
+                .frame(minHeight: accessibilitySettings.tertiaryButtonHeight)  // Story 7.2 AC4
                 .background(
                     LinearGradient(
                         gradient: Gradient(colors: [Color.purple, Color.purple.opacity(0.8)]),
@@ -255,12 +319,62 @@ struct ControlButtonsView: View {
                 )
                 .cornerRadius(10)
             }
-            .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
+            .buttonStyle(ScaleButtonStyle(
+                scaleAmount: accessibilitySettings.scaleAnimationAmount,  // Story 7.3 AC2
+                pressedColor: .clear,
+                normalColor: .clear,
+                animationDuration: accessibilitySettings.animationDuration  // Story 7.3 AC2
+            ))
             // Story 6.2 AC5: French accessibility labels
             .accessibilityLabel("Mes phrases")
             .accessibilityHint("Ouvre la gestion des phrases rapides")
 
-            // MARK: Story 6.2 AC1: SETTINGS ENTRY POINT (50pt minimum)
+            // MARK: Story 10.1 AC1, AC3: MODE FATIGUE BUTTON
+            // Task 2.2, 2.3, 2.4, 2.5, 2.6: Fatigue mode trigger button
+            Button(action: {
+                // Story 10.1 Task 2.5: Haptic feedback for navigation (.light)
+                let impact = UIImpactFeedbackGenerator(style: .light)
+                impact.impactOccurred()
+                // Story 10.1 Task 4.1: Enable fatigue mode
+                // H1 Fix (Code Review): Only set the flag - ContentView handles presentation via onChange
+                accessibilitySettings.isFatigueModeEnabled = true
+            }) {
+                HStack {
+                    // Story 10.1 Task 2.2: moon.zzz icon
+                    Image(systemName: "moon.zzz")
+                        .font(.system(size: 18))
+                    Text("Mode Fatigue")
+                        .font(.title3)
+                        .fontWeight(.medium)
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                // Story 10.1 Task 2.3, AC1, AC3: Conditional height (60pt standard, 80pt enhanced)
+                // H1 Fix (Code Review): Use fatigueModeButtonHeight instead of tertiaryButtonHeight to meet AC requirements
+                .frame(minHeight: accessibilitySettings.fatigueModeButtonHeight)
+                // Story 10.1 Task 2.4: Orange/amber gradient for "rest" mode
+                .background(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.orange, Color.orange.opacity(0.8)]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .cornerRadius(10)
+            }
+            .buttonStyle(ScaleButtonStyle(
+                scaleAmount: accessibilitySettings.scaleAnimationAmount,
+                pressedColor: .clear,
+                normalColor: .clear,
+                animationDuration: accessibilitySettings.animationDuration
+            ))
+            // Story 10.1 Task 2.6: French accessibility labels
+            // M1 Fix (Code Review): Added accessibilityValue for VoiceOver state awareness
+            .accessibilityLabel("Mode Fatigue")
+            .accessibilityHint("Active l'interface simplifiée pour la fatigue")
+            .accessibilityValue(accessibilitySettings.isFatigueModeEnabled ? "Activé" : "Désactivé")
+
+            // MARK: Story 7.2 AC4: SETTINGS ENTRY POINT (conditional 60pt enhanced, 50pt standard)
             // Replaces the 4+ settings buttons previously in sidebar (AC3)
             Button(action: {
                 // Story 6.2 AC4: Haptic feedback for navigation (.light)
@@ -277,11 +391,11 @@ struct ControlButtonsView: View {
                     Spacer()
                     Image(systemName: "chevron.right")
                         .font(.caption)
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(.white.opacity(accessibilitySettings.secondaryTextOpacity))  // Story 7.3 AC1
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .frame(minHeight: 50)  // Story 6.2 AC1: 50pt minimum
+                .frame(minHeight: accessibilitySettings.tertiaryButtonHeight)  // Story 7.2 AC4
                 .padding(.horizontal, 16)
                 .background(
                     LinearGradient(
@@ -292,7 +406,12 @@ struct ControlButtonsView: View {
                 )
                 .cornerRadius(10)
             }
-            .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
+            .buttonStyle(ScaleButtonStyle(
+                scaleAmount: accessibilitySettings.scaleAnimationAmount,  // Story 7.3 AC2
+                pressedColor: .clear,
+                normalColor: .clear,
+                animationDuration: accessibilitySettings.animationDuration  // Story 7.3 AC2
+            ))
             // Story 6.2 AC5: French accessibility labels
             .accessibilityLabel("Paramètres")
             .accessibilityHint("Ouvre le menu des réglages")
@@ -326,6 +445,7 @@ struct ControlButtonsView: View {
         .padding()
         .frame(minWidth: 200, idealWidth: 250, maxWidth: 300, alignment: .leading)
         // MARK: Story 6.2 AC2: Settings submenu presentation (fullScreenCover per Story 6.1 pattern)
+        // H1 Fix (Code Review 7.3): Explicit environmentObject injection for fullScreenCover context
         .fullScreenCover(isPresented: $showSettingsSubmenu) {
             SettingsSubmenuView(
                 onSelectSetting: { setting in
@@ -334,6 +454,7 @@ struct ControlButtonsView: View {
                 onDismiss: { showSettingsSubmenu = false },
                 showPrivacyOption: !AppConfig.Features.skipAuthentication
             )
+            .environmentObject(accessibilitySettings)
         }
         // Existing .sheet modifiers for individual settings views
         .sheet(isPresented: $showUsageSettings) {
@@ -360,6 +481,10 @@ struct ControlButtonsView: View {
             AccessibilitySettingsView(onDismiss: { showAccessibilitySettings = false })
                 .environmentObject(accessibilitySettings)
         }
+        // H1 Fix (Code Review): Removed duplicate fullScreenCover for FatigueModeView
+        // Story 10.2 Task 5.1: Fatigue mode presentation is now centralized in ContentView
+        // ContentView watches accessibilitySettings.isFatigueModeEnabled via onChange
+        // This eliminates dual state management and potential inconsistencies
     }
 
     // MARK: Story 6.2 Task 3.3: Handle settings view presentations from submenu
@@ -381,6 +506,7 @@ struct ControlButtonsView: View {
 }
 
 // MARK: - Legacy Components
+// Story 10.2 Task 5.2: Removed FatigueModeViewPlaceholder - replaced by FatigueModeView.swift
 // M1 Fix (Code Review): Removed legacy RepeatControlButton struct (65 lines of dead code)
 // Original Story 4.2 implementation was replaced by CompactRepeatButton in Story 6.2.
 // See git history for original implementation if needed.

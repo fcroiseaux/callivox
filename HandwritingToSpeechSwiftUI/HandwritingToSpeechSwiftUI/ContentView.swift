@@ -91,10 +91,28 @@ struct ContentView: View {
     @State private var speakTask: Task<Void, Never>?
     @State private var showPhraseManager: Bool = false
     @State private var showUsageSettings: Bool = false
+    // Story 9.1 Task 4.1: State for emergency panel presentation
+    @State private var showEmergencyPanel: Bool = false
+    // Story 10.2 Task 4.1: State for fatigue mode persistence check on app launch
+    @State private var showFatigueModeFromPersistence: Bool = false
 
     var body: some View {
         ZStack {
         VStack(spacing: 0) {
+            // Story 9.1 Task 3.1, 3.2: Emergency button at top-right (AC1, AC2)
+            // Positioned above OfflineIndicatorView for consistent visibility
+            HStack {
+                Spacer()
+                EmergencyButtonView(onTap: {
+                    // Story 9.1 Task 4.3: Set state to show emergency panel
+                    showEmergencyPanel = true
+                })
+                .padding(.trailing, 16)
+                .padding(.top, 8)
+            }
+            // Story 9.1 Task 3.3: Ensure visibility above other elements
+            .zIndex(1)
+
             // Offline indicator at top of screen (Story 2.1: AC2, AC3)
             // M1 Fix: Removed redundant animation modifier - animation is handled in OfflineIndicatorView
             // M2 Fix: OfflineIndicatorView now handles its own NetworkMonitor observation
@@ -206,8 +224,37 @@ struct ContentView: View {
         .sheet(isPresented: $showPhraseManager) {
             PhrasesListView()
         }
+        // Story 9.2: Emergency panel presentation (fullScreenCover for urgency)
+        // AC1-7: Full emergency panel with critical message buttons
+        .fullScreenCover(isPresented: $showEmergencyPanel) {
+            EmergencyPanelView(onDismiss: { showEmergencyPanel = false })
+                .environmentObject(accessibilitySettings)
+        }
+        // Story 10.2 Task 4.3: Fatigue mode persistence - show on app launch if enabled (AC5)
+        // Task 4.4: Inject environmentObjects
+        // H1 Fix (Code Review): Single source of truth - ContentView is the only presenter
+        .fullScreenCover(isPresented: $showFatigueModeFromPersistence) {
+            FatigueModeView(onDismiss: {
+                showFatigueModeFromPersistence = false
+            })
+            .environmentObject(accessibilitySettings)
+            .environmentObject(speechService)
+        }
         .onAppear {
             loadData()
+            // Story 10.2 Task 4.2: Check persisted fatigue mode state on app launch (AC5)
+            showFatigueModeFromPersistence = accessibilitySettings.isFatigueModeEnabled
+        }
+        // H1 Fix (Code Review): Watch isFatigueModeEnabled for changes from sidebar button
+        // This ensures ContentView presents FatigueModeView regardless of activation source
+        .onChange(of: accessibilitySettings.isFatigueModeEnabled) { oldValue, newValue in
+            if newValue && !showFatigueModeFromPersistence {
+                // Fatigue mode was activated (e.g., from sidebar), present the view
+                showFatigueModeFromPersistence = true
+            } else if !newValue && showFatigueModeFromPersistence {
+                // Fatigue mode was deactivated, dismiss the view
+                showFatigueModeFromPersistence = false
+            }
         }
         .onDisappear {
             cancelTasks()

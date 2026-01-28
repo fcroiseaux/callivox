@@ -2,8 +2,9 @@
 //  GuidanceControlsView.swift
 //  HandwritingToSpeechSwiftUI
 //
-//  Story 4.2: UI Guidance Controls
+//  Story 4.2: UI Guidance Controls (original implementation)
 //  Story 5.2: Enlarged touch targets for accessibility (60pt minimum)
+//  Story 6.1: Replaced horizontal scroll with dropdown + modal menu for accessibility
 //  Quick context controls for guiding AI suggestions in real-time.
 //  Created by CalliVox on 2026-01-26.
 //
@@ -13,95 +14,118 @@ import UIKit
 
 // MARK: - GuidanceControlsView
 
-/// Quick context controls for guiding AI suggestions (Story 4.2)
-/// Displays a horizontal scrollable row of buttons for selecting guidance context.
-/// AC1: Quick context buttons are visible and easily accessible
+/// Quick context controls for guiding AI suggestions (Story 4.2, modified in Story 6.1)
+/// Story 6.1: Replaced horizontal scrollable row with dropdown button + full-screen modal
+/// for better accessibility with motor impairments.
+/// AC1: Single dropdown button showing current context or "Guide rapide"
 @MainActor
 struct GuidanceControlsView: View {
     @ObservedObject private var suggestionService = SuggestionService.shared
+    // Story 7.2: Add accessibility settings for conditional sizing (AC2, AC5)
+    @EnvironmentObject var accessibilitySettings: AccessibilitySettings
+
+    // Story 6.1 Task 2.3: State for modal presentation
+    @State private var showContextModal = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Header
-            Text("Guide rapide")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.horizontal)
+            // Story 6.1 AC1: Dropdown button replacing horizontal scroll
+            // Removed: Header "Guide rapide" - now shown in dropdown button itself
+            // Removed: ScrollView(.horizontal) + HStack + ForEach GuidanceButton (Story 6.1 Task 2.1, 2.2)
+            // M1 Fix: Removed legacy GuidanceButton struct (dead code cleanup)
 
-            // Quick context buttons - horizontal scroll (AC1)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {  // Story 5.2: Increased from 10 for better accessibility (AC4)
-                    ForEach(GuidanceContext.allCases) { context in
-                        GuidanceButton(
-                            context: context,
-                            isSelected: suggestionService.currentGuidance == context,
-                            isDisabled: suggestionService.isLoading,  // H1 Fix: Prevent race condition
-                            action: { selectGuidance(context) }
-                        )
+            HStack {
+                // Story 6.1 AC1: Dropdown trigger for guidance context modal
+                Button(action: {
+                    // L2 Fix: Haptic feedback on modal open
+                    let impact = UIImpactFeedbackGenerator(style: .light)
+                    impact.impactOccurred()
+                    showContextModal = true
+                }) {
+                    HStack(spacing: 8) {
+                        if let context = suggestionService.currentGuidance {
+                            Image(systemName: context.icon)
+                            Text("Contexte: \(context.displayName)")
+                        } else {
+                            Image(systemName: "chevron.down.circle")
+                            Text("Guide rapide")
+                        }
+                        Image(systemName: "chevron.down")
+                            .font(.caption)
                     }
+                    .font(.body)
+                    .fontWeight(.medium)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 16)
+                    .frame(minHeight: accessibilitySettings.buttonHeight)  // Story 7.2 AC2: Conditional height (80pt enhanced, 60pt standard)
+                    .background(suggestionService.currentGuidance != nil ? Color.accentColor : Color(.systemGray5))
+                    .foregroundColor(suggestionService.currentGuidance != nil ? .white : .primary)
+                    .cornerRadius(24)
                 }
-                .padding(.horizontal)
+                // M1 Fix (Code Review 7.3): Use configurable animation values for AC2
+                .buttonStyle(ScaleButtonStyle(
+                    scaleAmount: accessibilitySettings.scaleAnimationAmount,
+                    pressedColor: .clear,
+                    normalColor: .clear,
+                    animationDuration: accessibilitySettings.animationDuration
+                ))
+                .disabled(suggestionService.isLoading)
+                .opacity(suggestionService.isLoading ? 0.5 : 1.0)
+                // M4 Fix: Conditional accessibility hint for loading state
+                .accessibilityLabel(suggestionService.currentGuidance?.displayName ?? "Aucun contexte sélectionné")
+                .accessibilityHint(suggestionService.isLoading
+                    ? "Chargement en cours, veuillez patienter"
+                    : "Ouvre le menu de sélection de contexte")
+
+                Spacer()
             }
+            .padding(.horizontal)
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Contrôles de guidage IA")
+        // Story 6.1 Task 2.5: Connect dropdown to present modal
+        .fullScreenCover(isPresented: $showContextModal) {
+            GuidanceContextModal(
+                currentContext: suggestionService.currentGuidance,
+                isLoading: suggestionService.isLoading,
+                onSelect: { context in
+                    handleSelection(context)
+                },
+                onDismiss: {
+                    showContextModal = false
+                }
+            )
+            .environmentObject(accessibilitySettings)  // Story 7.2: Inject for conditional modal button sizes
+        }
     }
 
     // MARK: - Actions
 
-    /// Handles guidance button tap with haptic feedback (AC1)
-    private func selectGuidance(_ context: GuidanceContext) {
-        // Haptic feedback - Story 5.2: Upgraded to .medium for better accessibility feedback
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
-
-        if suggestionService.currentGuidance == context {
-            // Deselect if already selected
-            suggestionService.clearGuidance()
-        } else {
-            // Generate suggestions with new guidance
+    /// Handles guidance selection from modal (Story 6.1 AC5, AC6)
+    /// - Parameter context: The selected context, or nil to clear guidance
+    private func handleSelection(_ context: GuidanceContext?) {
+        if let context = context {
+            // Select new context - generate suggestions
             Task {
                 await suggestionService.generateGuidedSuggestions(context: context)
             }
+        } else {
+            // Deselect (AC6) - clear guidance
+            suggestionService.clearGuidance()
         }
     }
 }
 
-// MARK: - GuidanceButton Component
+// M1 Fix: Removed legacy GuidanceButton struct
+// Original Story 4.2/5.2 implementation was replaced by Story 6.1 modal approach.
+// Legacy code removed to reduce maintenance burden and improve code clarity.
+// See git history for original implementation if needed.
 
-/// Individual guidance button component (AC1)
-/// Follows existing button patterns from SpeechShortcutsView.
-/// H1 Fix: Added isDisabled parameter to prevent race conditions during loading.
-@MainActor
-struct GuidanceButton: View {
-    let context: GuidanceContext
-    let isSelected: Bool
-    var isDisabled: Bool = false  // H1 Fix: Disable during loading
-    let action: () -> Void
+// MARK: - Preview
+// L2 Fix (Code Review): Added #Preview for Xcode Canvas testing
 
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Image(systemName: context.icon)
-                    .font(.system(size: 16))  // Story 5.2: Increased from 14 for better visibility (AC3)
-                Text(context.displayName)
-                    .font(.body)  // Story 5.2: Increased from .subheadline for better readability (AC3)
-                    .fontWeight(.medium)
-            }
-            .padding(.horizontal, 20)  // Story 5.2: Increased from 14 for larger touch target (AC2)
-            .padding(.vertical, 16)  // Story 5.2: Increased from 8 for 60pt minimum height (AC1)
-            .background(isSelected ? Color.accentColor : Color(.systemGray5))
-            .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(24)  // Story 5.2: Proportional increase from 20 for larger button
-            .frame(minHeight: 60)  // Story 5.2: Explicit 60pt minimum touch target (AC1)
-        }
-        .buttonStyle(ScaleButtonStyle(scaleAmount: 0.95, pressedColor: .clear, normalColor: .clear))
-        .disabled(isDisabled)  // H1 Fix: Prevent interactions during loading
-        .opacity(isDisabled ? 0.5 : 1.0)  // H1 Fix: Visual indication of disabled state
-        .accessibilityLabel(context.displayName)
-        .accessibilityHint(isDisabled
-            ? "Chargement en cours, veuillez patienter"
-            : "Génère des suggestions de type \(context.displayName.lowercased())")
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
-    }
+#Preview {
+    GuidanceControlsView()
+        .environmentObject(AccessibilitySettings())
+        .padding()
 }

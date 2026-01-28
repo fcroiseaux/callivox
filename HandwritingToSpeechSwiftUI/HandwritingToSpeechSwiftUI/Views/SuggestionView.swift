@@ -15,9 +15,16 @@ import UIKit
 /// Follows SpeechShortcutsView button pattern with accessibility support.
 /// Story 4.2: Added context menu for "More like this" (AC3)
 /// InvincibleVoice: Added edit callback for copying suggestion to text field.
+/// Story 7.2: Accepts headerButtonSize parameter for Enhanced Mode conditional sizing
+/// Story 7.3: Accepts animation parameters for reduced motion (M2 Fix)
 @MainActor
 struct SuggestionCard: View {
     let suggestion: String
+    let headerButtonSize: CGFloat  // Story 7.2 AC3: Conditional size (60pt enhanced, 44pt standard)
+    let cardPadding: CGFloat  // Story 7.2 AC3: L1 Fix - Conditional padding from AccessibilitySettings
+    // M2 Fix (Code Review 7.3): Animation parameters for AC2
+    var scaleAnimationAmount: CGFloat = 0.97
+    var animationDuration: Double = 0.2
     let onSelect: () -> Void
     let onMoreLikeThis: () -> Void
     let onEdit: () -> Void
@@ -30,24 +37,36 @@ struct SuggestionCard: View {
                     .font(.body)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding()
+                    .padding(cardPadding)  // Story 7.2 AC3: Conditional padding
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .buttonStyle(ScaleButtonStyle(scaleAmount: 0.97, pressedColor: .clear, normalColor: .clear))
+            // M2 Fix (Code Review 7.3): Use configurable animation values for AC2
+            .buttonStyle(ScaleButtonStyle(
+                scaleAmount: scaleAnimationAmount,
+                pressedColor: .clear,
+                normalColor: .clear,
+                animationDuration: animationDuration
+            ))
             .accessibilityLabel(suggestion)
             .accessibilityHint("Double-tapez pour prononcer cette suggestion")
 
             // InvincibleVoice: Edit button
-            // F4 Fix: Minimum 44x44 tap target per Apple HIG
+            // Story 7.2 AC3: Conditional touch target size (60pt enhanced, 44pt standard)
             Button(action: onEdit) {
                 Image(systemName: "pencil")
                     .font(.system(size: 16, weight: .medium))
                     .foregroundColor(.secondary)
-                    .frame(width: 44, height: 44)
+                    .frame(width: headerButtonSize, height: headerButtonSize)  // Story 7.2 AC3
                     .background(Color(.systemGray5))
                     .cornerRadius(8)
             }
-            .buttonStyle(ScaleButtonStyle(scaleAmount: 0.9, pressedColor: .clear, normalColor: .clear))
+            // M2 Fix (Code Review 7.3): Use configurable animation values for AC2
+            .buttonStyle(ScaleButtonStyle(
+                scaleAmount: scaleAnimationAmount,
+                pressedColor: .clear,
+                normalColor: .clear,
+                animationDuration: animationDuration
+            ))
             .accessibilityLabel("Éditer")
             .accessibilityHint("Copie la suggestion dans le champ de texte pour modification")
         }
@@ -80,6 +99,10 @@ struct SuggestionView: View {
     // M2 Fix: Use @ObservedObject for shared singleton (not @StateObject which implies ownership)
     @ObservedObject private var suggestionService = SuggestionService.shared
     @EnvironmentObject var speechService: SpeechService
+    // Story 7.2: Add accessibility settings for conditional sizing (AC3, AC5)
+    @EnvironmentObject var accessibilitySettings: AccessibilitySettings
+    // Story 8.2 Task 3.2: Add preset manager for recent history tracking
+    @EnvironmentObject var presetManager: PresetSentenceManager
 
     /// Current text for generating new suggestions
     var currentText: String
@@ -89,6 +112,9 @@ struct SuggestionView: View {
 
     /// InvincibleVoice: Callback when edit button is tapped (copies suggestion to text field)
     var onEditSuggestion: ((String) -> Void)?
+
+    // Story 7.4 AC2 Task 4.1: State for dismiss confirmation dialog
+    @State private var showDismissConfirmation: Bool = false
 
     var body: some View {
         // AC1, AC4: Only show when suggestions available or loading
@@ -114,6 +140,13 @@ struct SuggestionView: View {
             // M1 Fix: VoiceOver focus order - suggestions container is a logical group
             .accessibilityElement(children: .contain)
             .accessibilityLabel("Zone de suggestions IA")
+            // Story 7.4 AC2 Task 4.3: Confirmation dialog for dismiss
+            .alert("Masquer les suggestions ?", isPresented: $showDismissConfirmation) {
+                Button("Annuler", role: .cancel) { }
+                Button("Masquer") {
+                    dismissSuggestions()
+                }
+            }
         }
     }
 
@@ -140,7 +173,7 @@ struct SuggestionView: View {
             Spacer()
 
             // Story 4.2: "Different" button (AC4)
-            // Story 5.3: Enlarged touch target to min 44pt height (AC4)
+            // Story 7.2 AC3: Conditional touch target height (60pt enhanced, 44pt standard)
             Button(action: generateDifferent) {
                 HStack(spacing: 4) {
                     Image(systemName: "shuffle")
@@ -153,25 +186,38 @@ struct SuggestionView: View {
                 .padding(.vertical, 12)  // Story 5.3: Increased from 6pt (AC4)
                 .background(Color(.systemGray5))
                 .cornerRadius(10)  // Story 5.3: Proportional increase from 8pt
-                .frame(minHeight: 44)  // Story 5.3: Explicit 44pt minimum (AC4)
+                .frame(minHeight: accessibilitySettings.headerButtonSize)  // Story 7.2 AC3
             }
-            .buttonStyle(ScaleButtonStyle(scaleAmount: 0.9, pressedColor: .clear, normalColor: .clear))
+            // M2 Fix (Code Review 7.3): Use configurable animation values for AC2
+            .buttonStyle(ScaleButtonStyle(
+                scaleAmount: accessibilitySettings.scaleAnimationAmount,
+                pressedColor: .clear,
+                normalColor: .clear,
+                animationDuration: accessibilitySettings.animationDuration
+            ))
             .disabled(suggestionService.isLoading || suggestionService.suggestions.isEmpty)
             .opacity(suggestionService.isLoading || suggestionService.suggestions.isEmpty ? 0.4 : 1.0)
             .accessibilityLabel("Autres suggestions")
             .accessibilityHint("Génère des suggestions complètement différentes")
 
             // AC3: Refresh button
-            // Story 5.3: Enlarged touch target to 44x44pt (AC1)
+            // Story 7.2 AC3: Conditional touch target size (60pt enhanced, 44pt standard)
             Button(action: refreshSuggestions) {
                 Image(systemName: "arrow.clockwise")
                     .font(.system(size: 18, weight: .medium))  // Story 5.3: Increased from 16pt (proportional)
                     .foregroundColor(.secondary)
-                    .frame(width: 44, height: 44)  // Story 5.3: Increased from 32pt (AC1)
+                    .frame(width: accessibilitySettings.headerButtonSize,
+                           height: accessibilitySettings.headerButtonSize)  // Story 7.2 AC3
                     .background(Color(.systemGray5))
                     .cornerRadius(10)  // Story 5.3: Proportional increase from 8pt
             }
-            .buttonStyle(ScaleButtonStyle(scaleAmount: 0.9, pressedColor: .clear, normalColor: .clear))
+            // M2 Fix (Code Review 7.3): Use configurable animation values for AC2
+            .buttonStyle(ScaleButtonStyle(
+                scaleAmount: accessibilitySettings.scaleAnimationAmount,
+                pressedColor: .clear,
+                normalColor: .clear,
+                animationDuration: accessibilitySettings.animationDuration
+            ))
             .disabled(suggestionService.isLoading || currentText.isEmpty)
             // L3 Fix: Visual indication when disabled
             .opacity(suggestionService.isLoading || currentText.isEmpty ? 0.4 : 1.0)
@@ -181,16 +227,30 @@ struct SuggestionView: View {
                 : "Génère de nouvelles suggestions basées sur le texte actuel")
 
             // AC3: Dismiss button
-            // Story 5.3: Enlarged touch target to 44x44pt (AC2)
-            Button(action: dismissSuggestions) {
+            // Story 7.2 AC3: Conditional touch target size (60pt enhanced, 44pt standard)
+            // Story 7.4 AC2 Task 4.2: Conditional confirmation dialog
+            Button(action: {
+                if accessibilitySettings.requireConfirmationDialogs {
+                    showDismissConfirmation = true
+                } else {
+                    dismissSuggestions()
+                }
+            }) {
                 Image(systemName: "xmark")
                     .font(.system(size: 16, weight: .medium))  // Story 5.3: Increased from 14pt (proportional)
                     .foregroundColor(.secondary)
-                    .frame(width: 44, height: 44)  // Story 5.3: Increased from 32pt (AC2)
+                    .frame(width: accessibilitySettings.headerButtonSize,
+                           height: accessibilitySettings.headerButtonSize)  // Story 7.2 AC3
                     .background(Color(.systemGray5))
                     .cornerRadius(10)  // Story 5.3: Proportional increase from 8pt
             }
-            .buttonStyle(ScaleButtonStyle(scaleAmount: 0.9, pressedColor: .clear, normalColor: .clear))
+            // M2 Fix (Code Review 7.3): Use configurable animation values for AC2
+            .buttonStyle(ScaleButtonStyle(
+                scaleAmount: accessibilitySettings.scaleAnimationAmount,
+                pressedColor: .clear,
+                normalColor: .clear,
+                animationDuration: accessibilitySettings.animationDuration
+            ))
             .accessibilityLabel("Fermer les suggestions")
             .accessibilityHint("Masque les suggestions pour continuer à taper")
         }
@@ -217,6 +277,10 @@ struct SuggestionView: View {
             ForEach(suggestionService.suggestions, id: \.self) { suggestion in
                 SuggestionCard(
                     suggestion: suggestion,
+                    headerButtonSize: accessibilitySettings.headerButtonSize,  // Story 7.2 AC3
+                    cardPadding: accessibilitySettings.cardPadding,  // Story 7.2 AC3: L1 Fix
+                    scaleAnimationAmount: accessibilitySettings.scaleAnimationAmount,  // M2 Fix (Code Review 7.3)
+                    animationDuration: accessibilitySettings.animationDuration,  // M2 Fix (Code Review 7.3)
                     onSelect: { selectSuggestion(suggestion) },
                     onMoreLikeThis: { moreLikeThis(suggestion) },
                     onEdit: { editSuggestion(suggestion) }
@@ -235,6 +299,9 @@ struct SuggestionView: View {
 
         // Speak the suggestion via TTS
         speechService.speakText(suggestion)
+
+        // Story 8.2 Task 3.2, AC3: Add to recent phrases history
+        presetManager.addToRecentHistory(suggestion)
 
         // Add to conversation history for context-aware future suggestions
         suggestionService.addToHistory(userMessage: suggestion)
@@ -341,6 +408,8 @@ struct GenerateSuggestionsButton: View {
             )
             .cornerRadius(10)
         }
+        // M2 Fix (Code Review 7.3): Note - GenerateSuggestionsButton doesn't have accessibilitySettings
+        // Using default values as this button is typically used in non-enhanced contexts
         .buttonStyle(ScaleButtonStyle(scaleAmount: 0.95, pressedColor: .clear, normalColor: .clear))
         .disabled(suggestionService.isLoading || currentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         .accessibilityLabel("Générer des suggestions IA")
