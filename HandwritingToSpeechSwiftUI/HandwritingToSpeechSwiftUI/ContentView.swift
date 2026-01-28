@@ -128,6 +128,8 @@ struct ContentView: View {
                 )
 
                 // Colonne de droite : contenu principal amélioré
+                // iPad Fix: ScrollView pour permettre le défilement quand le contenu dépasse l'écran
+                ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     VStack {
                         Text("CalliVox")
@@ -138,7 +140,7 @@ struct ContentView: View {
                             .frame(maxWidth: .infinity)
                     }
                     .padding(.horizontal)
-                
+
                 // Improved text input area with immediate speak button
                 TextInputWithSpeakButton(
                     text: $recognizedText,
@@ -213,6 +215,7 @@ struct ContentView: View {
                 }
             }
                 .padding(.vertical)
+            } // End ScrollView (iPad Fix)
                 .frame(maxHeight: .infinity, alignment: .top)
             }
         } // End outer VStack (Story 2.1)
